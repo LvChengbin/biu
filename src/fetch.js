@@ -31,6 +31,10 @@ export default ( url, options ) => {
         const onreadystatechange = () => {
             if( xhr.readyState != 4 ) return;
             if( xhr.status === 0 ) return;
+
+
+            
+            
         };
 
     } );
