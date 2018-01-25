@@ -1,0 +1,54 @@
+{
+  "name": "@lvchengbin/biu",
+  "version": "1.0.10",
+  "description": "",
+  "keywords": [
+    "biu",
+    "cache",
+    "request",
+    "post",
+    "ajax",
+    "jsonp"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:LvChengbin/biu.git"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.38",
+    "@babel/preset-env": "^7.0.0-beta.38",
+    "eslint": "^4.14.0",
+    "jasmine-core": "^2.8.0",
+    "karma": "^2.0.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-es6-shim": "^1.0.0",
+    "karma-jasmine": "^1.1.1",
+    "karma-rollup-preprocessor": "^5.0.2",
+    "optimist": "^0.6.1",
+    "pre-commit": "^1.2.2",
+    "puppeteer": "^1.0.0",
+    "rollup": "^0.54.0",
+    "rollup-plugin-babel": "^4.0.0-beta.0",
+    "rollup-plugin-node-resolve": "^3.0.2"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "test": "karma start",
+    "prepublish": "npm run build",
+    "lint": "eslint ./ --cache --ignore-path .eslintignore",
+    "precommit-msg": "echo 'Pre-commit checks...' && exit 0"
+  },
+  "pre-commit": [
+    "precommit-msg",
+    "lint"
+  ],
+  "main": "dist/biu.cjs.js",
+  "jsnext:main": "src/biu.js",
+  "author": "LvChengbin",
+  "license": "MIT",
+  "dependencies": {
+    "@lvchengbin/is": "0.0.9",
+    "@lvchengbin/promise": "^1.1.0",
+    "@lvchengbin/url": "0.0.4"
+  }
+}
