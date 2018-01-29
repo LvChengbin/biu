@@ -1,12 +1,12 @@
 {
-    "presets" : [ [
-        "es2015",
-        {
+    "presets" : [
+        [ "@babel/preset-env", {
             "modules" : false,
             "targets" : {
-                "browsers" : [ "safari >= 10", "not ie <= 8" ]
-            }
-        }
-    ] ],
-    "plugins" : [ "external-helpers" ]
+                "browsers" : [ "last 3 versions", "chrome > 30", "firefox > 30", "safari >= 10" ]
+            },
+            "useBuiltIns" : "usage",
+            "debug" : true
+        } ]
+    ]
 }

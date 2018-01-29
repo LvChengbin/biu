@@ -17,6 +17,7 @@
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.38",
     "@babel/preset-env": "^7.0.0-beta.38",
+    "@lvchengbin/koa-router": "0.0.2",
     "eslint": "^4.14.0",
     "jasmine-core": "^2.8.0",
     "karma": "^2.0.0",
@@ -24,6 +25,10 @@
     "karma-es6-shim": "^1.0.0",
     "karma-jasmine": "^1.1.1",
     "karma-rollup-preprocessor": "^5.0.2",
+    "koa": "^2.4.1",
+    "koa-body": "^2.5.0",
+    "koa-logger": "^3.1.0",
+    "nodemon": "^1.14.11",
     "optimist": "^0.6.1",
     "pre-commit": "^1.2.2",
     "puppeteer": "^1.0.0",
@@ -32,6 +37,8 @@
     "rollup-plugin-node-resolve": "^3.0.2"
   },
   "scripts": {
+    "test-server": "nodemon test/server.js",
+    "test-ajax": "karma start --file=test/ajax.spec.js",
     "build": "rollup -c",
     "test": "karma start",
     "prepublish": "npm run build",

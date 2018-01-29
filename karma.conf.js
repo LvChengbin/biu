@@ -3,6 +3,7 @@
 
 process.env.CHROME_BIN = require( 'puppeteer' ).executablePath();
 
+const argv = require( 'optimist' ).argv;
 const resolve = require( 'rollup-plugin-node-resolve' );
 
 //const babel = require( 'rollup-plugin-babel' );
@@ -22,11 +23,36 @@ module.exports = function(config) {
 
 
         // list of files / patterns to load in the browser
-        files : [
-            'test/main.js',
-            { pattern : 'src/**/*.js', included : false, watched : false },
-            { pattern : 'test/**/*.spec.js', included : true, watched : false }
-        ],
+        files : ( () => {
+            const files = [
+                'test/main.js',
+                { pattern : 'src/**/*.js', included : false, watched : false }
+            ];
+
+            if( argv.file || argv.files ) {
+                argv.file && files.push( {
+                    pattern : argv.file.trim(),
+                    included : true,
+                    watched : false
+                } );
+
+                argv.files && argv.files.split( ',' ).forEach( file => {
+                    files.push( {
+                        pattern : file.trim(),
+                        included : true,
+                        watched : false
+                    } );
+                } );
+            } else {
+                files.push( {
+                    pattern : 'test/**/*.spec.js',
+                    included : true,
+                    watched : false
+                } );
+            }
+
+            return files;
+        } )(),
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
@@ -64,6 +90,9 @@ module.exports = function(config) {
 
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: true,
+
+        // set delay time in order to avoid that the test cases executing before the testing server restart.
+        autoWatchBatchDelay : 500,
 
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
