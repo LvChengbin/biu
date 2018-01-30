@@ -126,7 +126,41 @@ describe( 'ajax', () => {
         } );
     } );
 
+    // I want to add a case for testing uploading a file with FormData
+    // but I don't know how to do this in Chrome Headless, so I will add it
+    // later after I know how to do that.
+    /**
     it( 'post multipart/form-data with attachements', done => {
+
+        const formdata = new FormData();
+        formdata.append( 'x', 1 );
+        formdata.append( 'y', 2 );
+
+        const api = config.api + '/formdata?x=1&y=2';
+        ajax( api, {
+            method : 'post',
+            data : formdata,
+            headers : {
+                'content-type' : 'multipart/form-data'
+            }
+        } ).then( response => {
+            expect( response.status ).toEqual( 200 );
+            expect( JSON.parse( response.body ) ).toEqual( {
+                query : {
+                    x : '1',
+                    y : '2'
+                },
+                method : 'post',
+                body : {
+                    x : '1',
+                    y : '2'
+                }
+            } );
+            done();
+        } ).catch( e => {
+            console.log( e );
+        } );
     } );
+    */
 
 } );

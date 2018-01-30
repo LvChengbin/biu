@@ -31,16 +31,16 @@ function jsonp( url, options = {} ) {
 
     url += ( url.indexOf( '?' ) >= 0 ? '&' : '?' ) + querystring;
 
-    window[ callback ] = function( response ) {
+    window[ params.callback ] = function( response ) {
         r1( response );
 
-        window[ callback ] = null;
-        delete window[ callback ];
-        const script = document.getElementById( callback );
+        window[ params.callback ] = null;
+        delete window[ params.callback ];
+        const script = document.getElementById( params.callback );
         script && script.parentNode.removeChild( script );
     };
 
-    const script = createScriptTag( url, callback );
+    const script = createScriptTag( url, params.callback );
 
     script.addEventListener( 'error', e => { r2( e ) } );
 

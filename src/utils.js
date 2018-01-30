@@ -1,75 +1,34 @@
-import { URLSearchParams } from '@lvchengbin/url';
+import { URL, URLSearchParams } from '@lvchengbin/url';
 
-function generators() {
-    try {
-        new Function( 'function* test() {}' )();
-    } catch( e ) {
-        return false;
-    }
-    return true;
+function isURL( url ) {
+    if( window.URL.prototype.isPrototypeOf( url ) ) return true;
+    return URL.prototype.isPrototypeOf( url );
 }
 
-function blob() {
-    if( !( 'FileReader' in window ) ) return false;
-    if( !( 'Blob' in window ) ) return false;
-    try {
-        new Blob();
-        return true;
-    } catch( e ) {
-        return false;
-    }
+function isURLSearchParams( obj ) {
+    if( window.URLSearchParams.prototype.isPrototypeOf( obj ) ) return true;
+    return URLSearchParams.prototype.isPrototypeOf( obj );
 }
 
-const support = {
-    iterator : 'Symbol' in window && 'iterator' in Symbol,
-    generators : generators(),
-    searchParams : 'URLSearchParams' in window,
-    blob : blob()
-};
-
-function isSearchParams( obj ) {
-    if( URLSearchParams.prototype.isPrototypeOf( obj ) ) return true;
-    return support.searchParams && window.URLSearchParams.prototype.isPrototypeOf( obj )
-}
-
-function cloneBuffer( buffer ) {
-    if( buffer.slice ) {
-        return buffer.slice( 0 );
+function mergeParams( dest, src ) {
+    if( !isURLSearchParams( dest ) ) {
+        dest = new URLSearchParams( dest );
     }
 
-    // for IE 10 which does not support ArrayBuffer.prototype.slice
-    const view = new Uint8Array( buffer.byteLength );
-    view.set( new Uint8Array( buffer ) );
-    return view.buffer;
-}
+    if( !src ) return dest;
 
-function readBlobAsX( blob, x ) {
-    return new Promise( ( resolve, reject ) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            resolve( reader.result );
-        };
+    if( isURLSearchParams( src ) ) {
+        for( let item of src.entries() ) {
+            dest.append( item[ 0 ], item[ 1 ] );
+        }
+    } else {
+        const keys = Object.keys( src );
 
-        reader.onerror = () => {
-            reject( reader.error );
-        };
-
-        reader[ x ]( blob );
-    } );
-}
-
-function readArrayBufferAsText( arrayBuffer ) {
-    const view = new Uint8Array( arrayBuffer );
-    const seq = [];
-
-    for( let i = 0, l = view.length; i < l; i += 1 ) {
-        seq.push( String.fromCharCode( view[ i ] ) );
+        for( let item of keys ) {
+            dest.append( item, src[ item ] );
+        }
     }
-
-    return seq.join( '' );
+    return dest;
 }
 
-export default {
-    support, isSearchParams, cloneBuffer,
-    readBlobAsX, readArrayBufferAsText
-};
+export { isURL, isURLSearchParams, mergeParams };

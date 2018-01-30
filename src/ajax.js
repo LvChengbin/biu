@@ -1,7 +1,9 @@
 import Promise from '@lvchengbin/promise';
-import { URLSearchParams } from '@lvchengbin/url';
+import { URL } from '@lvchengbin/url';
 import isUndefined from '@lvchengbin/is/src/undefined';
 import isFunction from '@lvchengbin/is/src/function';
+import { mergeParams } from './utils';
+import Response from './response';
 
 export default ( url, options = {} ) => {
 
@@ -30,12 +32,12 @@ export default ( url, options = {} ) => {
             if( xhr.readyState != 4 ) return;
             if( xhr.status === 0 ) return;
 
-            const response = {
+            const response = new Response( {
                 body : responseType !== 'text' ? xhr.response : xhr.responseText,
                 status : xhr.status,
                 statusText : xhr.statusText,
                 headers : xhr.getAllResponseHeaders()
-            };
+            } );
 
 
             resolve( response );
@@ -43,17 +45,11 @@ export default ( url, options = {} ) => {
             xhr = null;
         };
 
-        if( !URLSearchParams.prototype.isPrototypeOf( params ) ) {
-            params = new URLSearchParams( params );
-        }
+        url = new URL( url, location.href );
 
-        params = params.toString();
-        
-        if( params ) {
-            url += ( url.indexOf( '?' ) > -1 ? '&' : '?' ) + params;
-        }
+        mergeParams( url.searchParams, params );
 
-        xhr.open( method, url, asynchronous );
+        xhr.open( method, url.href, asynchronous );
 
         xhr.onerror = e => {
             reject( e );

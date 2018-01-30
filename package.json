@@ -39,6 +39,8 @@
   "scripts": {
     "test-server": "nodemon test/server.js",
     "test-ajax": "karma start --file=test/ajax.spec.js",
+    "test-jsonp" : "karma start --file=test/jsonp.spec.js",
+    "test-biu" : "karma start --file=test/biu.spec.js",
     "build": "rollup -c",
     "test": "karma start",
     "prepublish": "npm run build",
@@ -55,7 +57,8 @@
   "license": "MIT",
   "dependencies": {
     "@lvchengbin/is": "0.0.9",
+    "@lvchengbin/localcache": "0.1.5",
     "@lvchengbin/promise": "^1.1.0",
-    "@lvchengbin/url": "0.0.4"
+    "@lvchengbin/url": "0.0.6"
   }
 }

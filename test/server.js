@@ -9,11 +9,15 @@ const router = new Router( app );
 app.use( logger() );
 app.use( body( { multipart : true } ) );
 
-router.options( '/deserted', async ctx => {
-    const origin = ctx.request.get( 'origin' );
-    ctx.set( 'Access-Control-Allow-Origin', origin );
-    ctx.set( 'Access-Control-Allow-Headers', 'x-custom-header' );
-    ctx.body = {};
+app.use( async ( ctx, next ) => {
+    if( ctx.method === 'OPTIONS' ) {
+        const origin = ctx.request.get( 'origin' );
+        ctx.set( 'Access-Control-Allow-Origin', origin );
+        ctx.set( 'Access-Control-Allow-Headers', 'x-custom-header' );
+        ctx.body = {};
+    } else {
+        next();
+    }
 } );
 
 router.get( '/deserted', async ctx => {
@@ -22,21 +26,23 @@ router.get( '/deserted', async ctx => {
     ctx.res.statusCode = 404;
 } );
 
-router.options( '/ajax', async ctx => {
-    const origin = ctx.request.get( 'origin' );
-    ctx.set( 'Access-Control-Allow-Origin', origin );
-    ctx.set( 'Access-Control-Allow-Headers', 'x-custom-header' );
-    ctx.body = {};
-} );
 
 router.get( '/ajax', async ctx => {
     const origin = ctx.request.get( 'origin' );
     ctx.set( 'Access-Control-Allow-Origin', origin );
-    ctx.body = {
+    const body = {
         method : 'get',
         query : ctx.query,
         header : ctx.request.headers[ 'x-custom-header' ]
     };
+
+    for( let item in ctx.query ) {
+        if( /^_\d+/.test( item ) ) {
+            body.nocache = item;
+        }
+    }
+
+    ctx.body = body;
 } );
 
 router.post( '/ajax', async ctx => {
@@ -50,15 +56,13 @@ router.post( '/ajax', async ctx => {
     };
 } );
 
-router.options( '/formdata', async ctx => {
+router.get( '/simpleresponse', async ctx => {
     const origin = ctx.request.get( 'origin' );
     ctx.set( 'Access-Control-Allow-Origin', origin );
-    ctx.set( 'Access-Control-Allow-Headers', 'x-custom-header' );
-    ctx.body = {};
+    ctx.body = 'body';
 } );
 
 router.post( '/formdata', async ctx => {
-    console.log( ctx.request.body.fields );
     const origin = ctx.request.get( 'origin' );
     ctx.set( 'Access-Control-Allow-Origin', origin );
     ctx.body = {
@@ -67,6 +71,11 @@ router.post( '/formdata', async ctx => {
         query : ctx.query,
         header : ctx.request.headers[ 'x-custom-header' ]
     };
+} );
+
+router.get( '/jsonp', async ctx => {
+    const callback = ctx.query.callback;
+    ctx.body = `${callback}(${JSON.stringify(ctx.query)})`;
 } );
 
 app.listen( 50001 );
