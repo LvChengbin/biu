@@ -5,10 +5,18 @@ import { mergeParams } from './utils';
 
 function resJSON( response ) {
     return response.headers[ 'Content-Type' ] === 'application/json';
-
 }
 
 function request( url, options = {} ) {
+
+    if( options.auth ) {
+        if( !options.headers ) {
+            options.headers = {};
+        }
+        const username = options.auth.username || '';
+        const password = options.auth.password || '';
+        options.headers.Authorization = 'Basic ' + btoa( username + ':' + password );
+    }
 
     return ajax( url, options ).then( response => {
         const status = response.status;

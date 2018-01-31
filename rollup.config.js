@@ -14,7 +14,7 @@ export default [ {
         { file : 'dist/biu.js', format : 'umd', name : 'biu' }
     ]
 }, {
-    input : 'src/biu.js',
+    input : 'src/index.js',
     plugins : [
         resolve( {
             module : true,

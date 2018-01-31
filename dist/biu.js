@@ -532,16 +532,16 @@ function jsonp( url, options = {} ) {
 
     url += ( url.indexOf( '?' ) >= 0 ? '&' : '?' ) + querystring;
 
-    window[ callback ] = function( response ) {
+    window[ params.callback ] = function( response ) {
         r1( response );
 
-        window[ callback ] = null;
-        delete window[ callback ];
-        const script = document.getElementById( callback );
+        window[ params.callback ] = null;
+        delete window[ params.callback ];
+        const script = document.getElementById( params.callback );
         script && script.parentNode.removeChild( script );
     };
 
-    const script = createScriptTag( url, callback );
+    const script = createScriptTag( url, params.callback );
 
     script.addEventListener( 'error', e => { r2( e ); } );
 
@@ -713,7 +713,7 @@ var is = {
     window : isWindow
 };
 
-const Response$1 = class {
+const Response = class {
     constructor( {
         status = 200,
         statusText = 'OK',
@@ -781,7 +781,7 @@ var ajax = ( url, options = {} ) => {
             if( xhr.readyState != 4 ) return;
             if( xhr.status === 0 ) return;
 
-            const response = new Response$1( {
+            const response = new Response( {
                 body : responseType !== 'text' ? xhr.response : xhr.responseText,
                 status : xhr.status,
                 statusText : xhr.statusText,
@@ -1841,12 +1841,48 @@ LocalCache.STORAGES = [ 'page', 'session', 'persistent' ];
 
 const localcache = new LocalCache( 'BIU-REQUEST-VERSION-1.0.0' );
 
+function set( url, data, options ) {
+    localcache.set( url, data, options );
+}
+
+function get( key, options = {} ) {
+    const storages = options.storages || LocalCache.STORAGES;
+
+    if( !isString( key ) ) {
+        key = key.toString();
+    }
+
+    return localcache.get( key, storages, options.options ).then( result => {
+        const response = new Response( {
+            url : key,
+            body : result.data,
+            status : 200,
+            statusText : 'From LocalCache',
+            headers : {
+                'Content-Type' : result.mime
+            }
+        } );
+
+        return response;
+    } );
+}
+
+var localcache$1 = { localcache, set, get };
+
 function resJSON( response ) {
     return response.headers[ 'Content-Type' ] === 'application/json';
-
 }
 
 function request( url, options = {} ) {
+
+    if( options.auth ) {
+        if( !options.headers ) {
+            options.headers = {};
+        }
+        const username = options.auth.username || '';
+        const password = options.auth.password || '';
+        options.headers.Authorization = 'Basic ' + btoa( username + ':' + password );
+    }
 
     return ajax( url, options ).then( response => {
         const status = response.status;
@@ -1862,7 +1898,7 @@ function request( url, options = {} ) {
         if( options.rawBody ) {
             return response.body;
         }
-        
+
         if( resJSON( response ) || options.type === 'json' ) {
             return response.json();
         }
@@ -1871,7 +1907,7 @@ function request( url, options = {} ) {
     } );
 }
 
-function get( url, options = {} ) {
+function get$1( url, options = {} ) {
 
     const {
         cache = false,
@@ -1896,32 +1932,9 @@ function get( url, options = {} ) {
         return request( url, options );
     }
 
-    const { get = {}, set = false } = options.localcache;
+    const { set = false } = options.localcache;
 
-    const { from = LocalCache.STORAGES } = get;
-
-    return localcache.get( from, get.options || {} ).then( result => {
-
-        const response = new Response( {
-            url : url.href,
-            body : result.data,
-            status : 0,
-            statusText : 'From LocalCache'
-        } );
-
-        if( options.fullResponse ) {
-            return response;
-        }
-
-        if( options.rawBody ) {
-            return result.body;
-        }
-
-        if( result.type === 'json' || options.type === 'json' ) {
-            return JSON.parse( result.data );
-        }
-        
-    } ).catch( () => {
+    return localcache$1.get( url, options.get ).catch( () => {
         if( !set ) {
             return request( url, options );
         }
@@ -1929,12 +1942,15 @@ function get( url, options = {} ) {
 
         return request( url, options ).then( response => {
 
+            const isJSON = ( resJSON( response ) || options.type === 'json' );
 
-            if( set !== false ) {
-                if( resJSON( response ) ) {
-                    LocalCache.set( url, body, set );
-                }
+            if( isJSON && !set.mime ) {
+                set.mime = 'application/json';
             }
+
+            url.searchParams.sort();
+
+            localcache$1.set( url.toString(), response.body, set );
 
             if( fullResponse ) {
                 return response;
@@ -1944,7 +1960,7 @@ function get( url, options = {} ) {
                 return response.body;
             }
 
-            if( resJSON( response ) || options.type === 'json' ) {
+            if( isJSON ) {
                 return response.json();
             }
 
@@ -1969,7 +1985,7 @@ function post( url, options = {} ) {
     return request( url, options );
 }
 
-var index = { request, get, post, ajax, jsonp };
+var index = { request, get: get$1, post, ajax, jsonp };
 
 return index;
 

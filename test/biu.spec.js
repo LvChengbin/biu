@@ -4,6 +4,31 @@ import Response from '../src/response';
 import config from './config';
 
 describe( 'biu.request', () => {
+    it( 'http authorization failed', done => {
+        const api = config.api + '/auth';
+        biu.get( api, {
+            fullResponse : true
+        } ).then( response => {
+            expect( response.status ).toEqual( 401 );
+            done();
+        } );
+    } );
+
+    it( 'http authorization', done => {
+        const api = config.api + '/auth';
+        biu.get( api, {
+            fullResponse : true,
+            auth : {
+                username : 'n',
+                password : 'p'
+            }
+        } ).then( response => {
+            expect( response.status ).toEqual( 200 );
+            done();
+        } ).catch( response => {
+            console.log( 'Failed Auth: ', response );
+        } );
+    } );
 } );
 
 describe( 'biu.get without localcache', () => {
@@ -178,7 +203,7 @@ describe( 'biu.get with localcache', () => {
                 expect( response.statusText ).toEqual( 'OK' );
                 done();
             }
-        ] );
+        ], { interval : 1 } );
 
         sequence.on( 'failed', e => {
             console.log( 'Failed: ', e );
