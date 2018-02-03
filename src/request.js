@@ -68,7 +68,7 @@ function get( url, options = {} ) {
 
     const { set = false } = options.localcache;
 
-    return localcache.get( url, options.get ).catch( () => {
+    return localcache.get( url, options.localcache ).catch( () => {
         if( !set ) {
             return request( url, options );
         }
@@ -81,8 +81,6 @@ function get( url, options = {} ) {
             if( isJSON && !set.mime ) {
                 set.mime = 'application/json';
             }
-
-            url.searchParams.sort();
 
             localcache.set( url.toString(), response.body, set );
 

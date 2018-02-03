@@ -38,6 +38,12 @@ router.get( '/deserted', async ctx => {
     ctx.res.statusCode = 404;
 } );
 
+router.get( '/md5', async ctx => {
+    const origin = ctx.request.get( 'origin' );
+    ctx.set( 'Access-Control-Allow-Origin', origin );
+    ctx.body = 'biu';
+} );
+
 
 router.get( '/ajax', async ctx => {
     const origin = ctx.request.get( 'origin' );

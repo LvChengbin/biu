@@ -1253,7 +1253,7 @@ function () {
 
 var attrs = ['href', 'origin', 'host', 'hash', 'hostname', 'pathname', 'port', 'protocol', 'search', 'username', 'password', 'searchParams'];
 
-var URL = function URL(path, base) {
+var URL$1 = function URL(path, base) {
   _classCallCheck(this, URL);
 
   if (window.URL) {
@@ -2032,7 +2032,7 @@ var ajax = (function (url) {
       xhr = null;
     };
 
-    url = new URL(url, location.href);
+    url = new URL$1(url, location.href);
     mergeParams(url.searchParams, params);
     xhr.open(method, url.href, asynchronous);
 
@@ -3576,21 +3576,21 @@ LocalCache.STORAGES = ['page', 'session', 'persistent'];
 
 var localcache = new LocalCache('BIU-REQUEST-VERSION-1.0.0');
 
-function set(url, data, options) {
-  localcache.set(url, data, options);
+function set(key, data, options) {
+  var url = new URL(key);
+  url.searchParams.sort();
+  localcache.set(url.toString(), data, options);
 }
 
 function get(key) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var url = new URL(key);
+  url.searchParams.sort();
   var storages = options.storages || LocalCache.STORAGES;
-
-  if (!isString(key)) {
-    key = key.toString();
-  }
-
-  return localcache.get(key, storages, options.options).then(function (result) {
+  url = url.toString();
+  return localcache.get(url, storages, options.get).then(function (result) {
     var response = new Response({
-      url: key,
+      url: url,
       body: result.data,
       status: 200,
       statusText: 'From LocalCache',
@@ -3660,7 +3660,7 @@ function get$1(url) {
   options = Object.assign({}, options, {
     method: 'GET'
   });
-  url = new URL(url, location.href);
+  url = new URL$1(url, location.href);
   mergeParams(url.searchParams, options.params);
   options.params = {};
 
@@ -3674,7 +3674,7 @@ function get$1(url) {
 
   var _options$localcache$s = options.localcache.set,
       set = _options$localcache$s === void 0 ? false : _options$localcache$s;
-  return localcache$1.get(url, options.get).catch(function () {
+  return localcache$1.get(url, options.localcache).catch(function () {
     if (!set) {
       return request(url, options);
     }
@@ -3687,7 +3687,6 @@ function get$1(url) {
         set.mime = 'application/json';
       }
 
-      url.searchParams.sort();
       localcache$1.set(url.toString(), response.body, set);
 
       if (fullResponse) {

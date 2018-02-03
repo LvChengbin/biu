@@ -210,6 +210,84 @@ describe( 'biu.get with localcache', () => {
         } );
     } );
 
+    it( 'to check data in localcache by md5', done => {
+        const api = config.api + '/md5?x=1&y=2&z=3&m=4';
+
+        const options = {
+            fullResponse : true,
+            localcache : {
+                set : {
+                    page : {
+                        md5 : true
+                    }
+                },
+                get : {
+                    md5 : '44899742450bdb319a869ed7438a61c6'
+                }
+            }
+        };
+
+        const sequence = new Sequence( [
+            () => {
+                return biu.get( api, options );
+            },
+            () => {
+                return biu.get( api, options  )
+            },
+            result => {
+                const response = result.value;
+                expect( response instanceof Response ).toBeTruthy();
+                expect( response.status ).toEqual( 200 );
+                expect( response.statusText ).toEqual( 'From LocalCache' );
+                done();
+            }
+        ], { interval : 1 } );
+
+        sequence.on( 'failed', e => {
+            console.log( 'Failed: ', e );
+        } );
+        
+    } );
+
+    it( 'to get data in localcache by wrong md5', done => {
+        const api = config.api + '/md5?x=1&y=2&z=3&m=4&n=5';
+
+        const options = {
+            fullResponse : true,
+            localcache : {
+                set : {
+                    page : {
+                        md5 : true
+                    }
+                },
+                get : {
+                    md5 : '44899742450bdb319a869ed7438a61c7'
+                }
+            }
+        };
+
+        const sequence = new Sequence( [
+            () => {
+                return biu.get( api, options );
+            },
+            () => {
+                return biu.get( api, options  )
+            },
+            result => {
+                const response = result.value;
+                expect( response instanceof Response ).toBeTruthy();
+                expect( response.status ).toEqual( 200 );
+                expect( response.statusText ).toEqual( 'OK' );
+                done();
+            }
+        ], { interval : 1 } );
+
+        sequence.on( 'failed', e => {
+            console.log( 'Failed: ', e );
+        } );
+        
+    } );
+
 } );
 
 describe( 'biu.post', () => {

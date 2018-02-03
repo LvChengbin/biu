@@ -433,7 +433,7 @@ const attrs = [
     'username', 'password', 'searchParams'
 ];
 
-class URL {
+class URL$1 {
     constructor( path, base ) {
         if( window.URL ) {
             let url$$1;
@@ -448,12 +448,12 @@ class URL {
             return url$$1;
         } else {
 
-            if( URL.prototype.isPrototypeOf( path ) ) {
-                return new URL( path.href );
+            if( URL$1.prototype.isPrototypeOf( path ) ) {
+                return new URL$1( path.href );
             }
 
-            if( URL.prototype.isPrototypeOf( base ) ) {
-                return new URL( path, base.href );
+            if( URL$1.prototype.isPrototypeOf( base ) ) {
+                return new URL$1( path, base.href );
             }
 
             path = String( path );
@@ -472,7 +472,7 @@ class URL {
             }
 
             if( base ) {
-                base = new URL( base );
+                base = new URL$1( base );
                 if( path.charAt( 0 ) === '/' && path.charAt( 1 ) === '/' ) {
                     path = base.protocol + path;
                 } else if( path.charAt( 0 ) === '/' ) {
@@ -794,7 +794,7 @@ var ajax = ( url, options = {} ) => {
             xhr = null;
         };
 
-        url = new URL( url, location.href );
+        url = new URL$1( url, location.href );
 
         mergeParams( url.searchParams, params );
 
@@ -1841,20 +1841,26 @@ LocalCache.STORAGES = [ 'page', 'session', 'persistent' ];
 
 const localcache = new LocalCache( 'BIU-REQUEST-VERSION-1.0.0' );
 
-function set( url, data, options ) {
-    localcache.set( url, data, options );
+function set( key, data, options ) {
+    const url = new URL( key );
+    url.searchParams.sort();
+
+    localcache.set( url.toString(), data, options );
 }
 
 function get( key, options = {} ) {
+
+    let url = new URL( key ); 
+
+    url.searchParams.sort();
+
     const storages = options.storages || LocalCache.STORAGES;
 
-    if( !isString( key ) ) {
-        key = key.toString();
-    }
+    url = url.toString();
 
-    return localcache.get( key, storages, options.options ).then( result => {
+    return localcache.get( url, storages, options.get ).then( result => {
         const response = new Response( {
-            url : key,
+            url,
             body : result.data,
             status : 200,
             statusText : 'From LocalCache',
@@ -1919,7 +1925,7 @@ function get$1( url, options = {} ) {
         method : 'GET'
     } );
 
-    url = new URL( url, location.href );
+    url = new URL$1( url, location.href );
     mergeParams( url.searchParams, options.params ); 
 
     options.params = {};
@@ -1934,7 +1940,7 @@ function get$1( url, options = {} ) {
 
     const { set = false } = options.localcache;
 
-    return localcache$1.get( url, options.get ).catch( () => {
+    return localcache$1.get( url, options.localcache ).catch( () => {
         if( !set ) {
             return request( url, options );
         }
@@ -1947,8 +1953,6 @@ function get$1( url, options = {} ) {
             if( isJSON && !set.mime ) {
                 set.mime = 'application/json';
             }
-
-            url.searchParams.sort();
 
             localcache$1.set( url.toString(), response.body, set );
 

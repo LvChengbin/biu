@@ -1,23 +1,28 @@
 import LocalCache from '@lvchengbin/localcache';
-import isString from '@lvchengbin/is/src/string';
 import Response from './response';
 
 const localcache = new LocalCache( 'BIU-REQUEST-VERSION-1.0.0' );
 
-function set( url, data, options ) {
-    localcache.set( url, data, options );
+function set( key, data, options ) {
+    const url = new URL( key );
+    url.searchParams.sort();
+
+    localcache.set( url.toString(), data, options );
 }
 
 function get( key, options = {} ) {
+
+    let url = new URL( key ); 
+
+    url.searchParams.sort();
+
     const storages = options.storages || LocalCache.STORAGES;
 
-    if( !isString( key ) ) {
-        key = key.toString();
-    }
+    url = url.toString();
 
-    return localcache.get( key, storages, options.options ).then( result => {
+    return localcache.get( url, storages, options.get ).then( result => {
         const response = new Response( {
-            url : key,
+            url,
             body : result.data,
             status : 200,
             statusText : 'From LocalCache',
