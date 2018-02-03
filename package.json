@@ -1,6 +1,6 @@
 {
   "name": "@lvchengbin/biu",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "keywords": [
     "biu",
@@ -55,7 +55,7 @@
     "lint"
   ],
   "main": "dist/biu.cjs.js",
-  "jsnext:main": "src/biu.js",
+  "jsnext:main": "src/index.js",
   "author": "LvChengbin",
   "license": "MIT",
   "dependencies": {
