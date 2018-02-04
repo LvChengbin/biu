@@ -173,6 +173,37 @@ describe( 'biu.get with localcache', () => {
         } );
     } );
 
+    it( 'get from cache', done => {
+        const api = config.api + '/ajax?x=1&y=2&m=abc';
+
+        const options = {
+            fullResponse : true,
+            localcache : {
+                persistent : true
+            }
+        };
+
+        const sequence = new Sequence( [
+            () => {
+                return biu.get( api, options );
+            },
+            () => {
+                return biu.get( api, options  )
+            },
+            result => {
+                const response = result.value;
+                expect( response instanceof Response ).toBeTruthy();
+                expect( response.status ).toEqual( 200 );
+                expect( response.statusText ).toEqual( 'From LocalCache' );
+                done();
+            }
+        ] );
+
+        sequence.on( 'failed', e => {
+            console.log( 'Failed: ', e );
+        } );
+    } );
+
     it( 'using localcache with validate conditions.', done => {
         const api = config.api + '/ajax?x=1&y=2&z=3';
 

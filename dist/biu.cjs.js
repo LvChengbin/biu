@@ -1865,7 +1865,7 @@ function set( key, data, options ) {
     const url = new URL( key );
     url.searchParams.sort();
 
-    localcache.set( url.toString(), data, options );
+    return localcache.set( url.toString(), data, options );
 }
 
 function get( key, options = {} ) {
@@ -1963,27 +1963,30 @@ function get$1( url, options = {} ) {
 
             const isJSON = ( resJSON( response ) || options.type === 'json' );
 
-            if( isJSON && !localcache.mime ) {
-                localcache.mime = 'application/json';
-            } else {
-                localcache.mime = response.headers[ 'Content-Type' ];
+            if( !localcache.mime ) {
+                if( isJSON ) {
+                    localcache.mime = 'application/json';
+                } else {
+                    localcache.mime = response.headers[ 'Content-Type' ] || 'text/plain';
+                }
             }
 
-            lc.set( url.toString(), response.body, localcache );
+            return lc.set( url.toString(), response.body, localcache ).then( () => {
 
-            if( fullResponse ) {
-                return response;
-            }
+                if( fullResponse ) {
+                    return response;
+                }
 
-            if( rawBody ) {
+                if( rawBody ) {
+                    return response.body;
+                }
+
+                if( isJSON ) {
+                    return response.json();
+                }
+
                 return response.body;
-            }
-
-            if( isJSON ) {
-                return response.json();
-            }
-
-            return response.body;
+            } );
         } );
     } );
 }

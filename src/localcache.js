@@ -7,7 +7,7 @@ function set( key, data, options ) {
     const url = new URL( key );
     url.searchParams.sort();
 
-    localcache.set( url.toString(), data, options );
+    return localcache.set( url.toString(), data, options );
 }
 
 function get( key, options = {} ) {
