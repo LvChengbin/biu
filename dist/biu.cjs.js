@@ -1070,6 +1070,9 @@ Sequence.SUCCEEDED = 1;
 Sequence.FAILED = 0;
 
 Sequence.all = ( steps, interval = 0 ) => {
+    if( !steps.length ) {
+        return Promise$1.resolve( [] );
+    }
     const sequence = new Sequence( steps, { interval } );
     return new Promise$1( ( resolve, reject ) => {
         sequence.on( 'end', results => {
@@ -1083,6 +1086,9 @@ Sequence.all = ( steps, interval = 0 ) => {
 };
 
 Sequence.chain = ( steps, interval = 0 ) => {
+    if( !steps.length ) {
+        return Promise$1.resolve( [] );
+    }
     const sequence = new Sequence( steps, { interval } );
     return new Promise$1( resolve => {
         sequence.on( 'end', results => {
@@ -1092,6 +1098,9 @@ Sequence.chain = ( steps, interval = 0 ) => {
 };
 
 Sequence.any = ( steps, interval = 0 ) => {
+    if( !steps.length ) {
+        return Promise$1.reject( [] );
+    }
     const sequence = new Sequence( steps, { interval } );
     return new Promise$1( ( resolve, reject ) => {
         sequence.on( 'success', () => {
@@ -1367,7 +1376,7 @@ class Storage {
         } );
     }
 
-    output( data ) {
+    output( data, storage ) {
 
         if( !data.string ) {
             data.data = JSON.parse( data.data );
@@ -1376,6 +1385,8 @@ class Storage {
         if( data.extra ) {
             data.extra = JSON.parse( data.extra );
         }
+
+        data.storage = storage;
 
         return data;
     }
@@ -1398,13 +1409,12 @@ class Memory extends Storage {
 
         if( !data ) return Promise$1.reject();
 
-
         if( this.validate( data, options ) === false ) {
             options.autodelete !== false && this.delete( key );
             return Promise$1.reject();
         }
 
-        return Promise$1.resolve( this.output( data ) );
+        return Promise$1.resolve( this.output( data, 'page' ) );
     }
 
     delete( key ) {
@@ -1454,7 +1464,7 @@ class SessionStorage extends Storage {
             this.delete( key );
             return Promise$1.reject();
         }
-        return Promise$1.resolve( this.output( data ) );
+        return Promise$1.resolve( this.output( data, 'session' ) );
     }
 
     delete( key ) {
@@ -1594,7 +1604,7 @@ class IDB extends Storage {
                         return reject();
                     }
                     delete data.key;
-                    resolve( this.output( data ) );
+                    resolve( this.output( data, 'persistent' ) );
                 };
 
                 request.onerror = e => {
@@ -1735,7 +1745,21 @@ class LocalCache {
         }
 
         return Sequence.any( steps ).then( results => {
-            return results[ results.length - 1 ].value;
+            const result = results[ results.length - 1 ];
+            const value = result.value;
+            const set = [];
+
+            for( let storage of LocalCache.STORAGES ) {
+                if( storage === result.storage ) break;
+
+                options[ storage ] && set.push( () => {
+                    return this.set( key, value.data, {
+                        [ storage ] : options[ storage ]
+                    } );
+                } );
+            }
+
+            return Sequence.all( set ).then( () => value );
         } );
     }
 
@@ -1847,14 +1871,10 @@ function set( key, data, options ) {
 function get( key, options = {} ) {
 
     let url = new URL( key ); 
-
     url.searchParams.sort();
-
-    const storages = options.storages || LocalCache.STORAGES;
-
     url = url.toString();
 
-    return localcache.get( url, storages, options.get ).then( result => {
+    return localcache.get( url, LocalCache.STORAGES, options ).then( result => {
         const response = new Response( {
             url,
             body : result.data,
@@ -1869,7 +1889,7 @@ function get( key, options = {} ) {
     } );
 }
 
-var localcache$1 = { localcache, set, get };
+var lc = { localcache, set, get };
 
 function resJSON( response ) {
     return response.headers[ 'Content-Type' ] === 'application/json';
@@ -1914,7 +1934,8 @@ function get$1( url, options = {} ) {
     const {
         cache = false,
         fullResponse = false,
-        rawBody = false
+        rawBody = false,
+        localcache = false
     } = options;
 
     options = Object.assign( {}, options, {
@@ -1930,27 +1951,25 @@ function get$1( url, options = {} ) {
         options.params[ '_' + +new Date ] = '_';
     }
 
-    if( !options.localcache ) {
+    if( !localcache ) {
         return request( url, options );
     }
 
-    const { set = false } = options.localcache;
+    return lc.get( url, localcache ).catch( () => {
 
-    return localcache$1.get( url, options.localcache ).catch( () => {
-        if( !set ) {
-            return request( url, options );
-        }
         options.fullResponse = true;
 
         return request( url, options ).then( response => {
 
             const isJSON = ( resJSON( response ) || options.type === 'json' );
 
-            if( isJSON && !set.mime ) {
-                set.mime = 'application/json';
+            if( isJSON && !localcache.mime ) {
+                localcache.mime = 'application/json';
+            } else {
+                localcache.mime = response.headers[ 'Content-Type' ];
             }
 
-            localcache$1.set( url.toString(), response.body, set );
+            lc.set( url.toString(), response.body, localcache );
 
             if( fullResponse ) {
                 return response;

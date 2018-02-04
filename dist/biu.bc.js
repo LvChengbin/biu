@@ -2394,6 +2394,11 @@ Sequence.FAILED = 0;
 
 Sequence.all = function (steps) {
   var interval = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+  if (!steps.length) {
+    return Promise$1.resolve([]);
+  }
+
   var sequence = new Sequence(steps, {
     interval: interval
   });
@@ -2410,6 +2415,11 @@ Sequence.all = function (steps) {
 
 Sequence.chain = function (steps) {
   var interval = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+  if (!steps.length) {
+    return Promise$1.resolve([]);
+  }
+
   var sequence = new Sequence(steps, {
     interval: interval
   });
@@ -2422,6 +2432,11 @@ Sequence.chain = function (steps) {
 
 Sequence.any = function (steps) {
   var interval = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+  if (!steps.length) {
+    return Promise$1.reject([]);
+  }
+
   var sequence = new Sequence(steps, {
     interval: interval
   });
@@ -2843,7 +2858,7 @@ function () {
     }
   }, {
     key: "output",
-    value: function output(data) {
+    value: function output(data, storage) {
       if (!data.string) {
         data.data = JSON.parse(data.data);
       }
@@ -2852,6 +2867,7 @@ function () {
         data.extra = JSON.parse(data.extra);
       }
 
+      data.storage = storage;
       return data;
     }
   }]);
@@ -2892,7 +2908,7 @@ function (_Storage) {
         return Promise$1.reject();
       }
 
-      return Promise$1.resolve(this.output(data));
+      return Promise$1.resolve(this.output(data, 'page'));
     }
   }, {
     key: "delete",
@@ -2975,7 +2991,7 @@ function (_Storage) {
         return Promise$1.reject();
       }
 
-      return Promise$1.resolve(this.output(data));
+      return Promise$1.resolve(this.output(data, 'session'));
     }
   }, {
     key: "delete",
@@ -3167,7 +3183,7 @@ function (_Storage) {
             }
 
             delete data.key;
-            resolve(_this5.output(data));
+            resolve(_this5.output(data, 'persistent'));
           };
 
           request.onerror = function (e) {
@@ -3385,7 +3401,47 @@ function () {
       }
 
       return Sequence.any(steps).then(function (results) {
-        return results[results.length - 1].value;
+        var result = results[results.length - 1];
+        var value = result.value;
+        var set = [];
+
+        var _loop3 = function _loop3(storage) {
+          if (storage === result.storage) return "break";
+          options[storage] && set.push(function () {
+            return _this2.set(key, value.data, _defineProperty({}, storage, options[storage]));
+          });
+        };
+
+        var _iteratorNormalCompletion3 = true;
+        var _didIteratorError3 = false;
+        var _iteratorError3 = undefined;
+
+        try {
+          for (var _iterator3 = LocalCache.STORAGES[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var storage = _step3.value;
+
+            var _ret2 = _loop3(storage);
+
+            if (_ret2 === "break") break;
+          }
+        } catch (err) {
+          _didIteratorError3 = true;
+          _iteratorError3 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
+              _iterator3.return();
+            }
+          } finally {
+            if (_didIteratorError3) {
+              throw _iteratorError3;
+            }
+          }
+        }
+
+        return Sequence.all(set).then(function () {
+          return value;
+        });
       });
     }
   }, {
@@ -3396,58 +3452,13 @@ function () {
       modes || (modes = LocalCache.STORAGES);
       var steps = [];
 
-      var _loop3 = function _loop3(mode) {
+      var _loop4 = function _loop4(mode) {
         if (!_this3[mode]) {
           throw new TypeError("Unexcepted mode \"".concat(mode, "\", excepted one of: ").concat(LocalCache.STORAGES.join(', ')));
         }
 
         steps.push(function () {
           return _this3[mode].delete(key);
-        });
-      };
-
-      var _iteratorNormalCompletion3 = true;
-      var _didIteratorError3 = false;
-      var _iteratorError3 = undefined;
-
-      try {
-        for (var _iterator3 = modes[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-          var mode = _step3.value;
-
-          _loop3(mode);
-        }
-      } catch (err) {
-        _didIteratorError3 = true;
-        _iteratorError3 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
-            _iterator3.return();
-          }
-        } finally {
-          if (_didIteratorError3) {
-            throw _iteratorError3;
-          }
-        }
-      }
-
-      return Sequence.all(steps);
-    }
-  }, {
-    key: "clear",
-    value: function clear(modes) {
-      var _this4 = this;
-
-      modes || (modes = LocalCache.STORAGES);
-      var steps = [];
-
-      var _loop4 = function _loop4(mode) {
-        if (!_this4[mode]) {
-          throw new TypeError("Unexcepted mode \"".concat(mode, "\", excepted one of: ").concat(LocalCache.STORAGES.join(', ')));
-        }
-
-        steps.push(function () {
-          return _this4[mode].clear();
         });
       };
 
@@ -3472,6 +3483,51 @@ function () {
         } finally {
           if (_didIteratorError4) {
             throw _iteratorError4;
+          }
+        }
+      }
+
+      return Sequence.all(steps);
+    }
+  }, {
+    key: "clear",
+    value: function clear(modes) {
+      var _this4 = this;
+
+      modes || (modes = LocalCache.STORAGES);
+      var steps = [];
+
+      var _loop5 = function _loop5(mode) {
+        if (!_this4[mode]) {
+          throw new TypeError("Unexcepted mode \"".concat(mode, "\", excepted one of: ").concat(LocalCache.STORAGES.join(', ')));
+        }
+
+        steps.push(function () {
+          return _this4[mode].clear();
+        });
+      };
+
+      var _iteratorNormalCompletion5 = true;
+      var _didIteratorError5 = false;
+      var _iteratorError5 = undefined;
+
+      try {
+        for (var _iterator5 = modes[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          var mode = _step5.value;
+
+          _loop5(mode);
+        }
+      } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion5 && _iterator5.return != null) {
+            _iterator5.return();
+          }
+        } finally {
+          if (_didIteratorError5) {
+            throw _iteratorError5;
           }
         }
       }
@@ -3542,26 +3598,26 @@ function () {
       };
 
       var steps = [];
-      var _iteratorNormalCompletion5 = true;
-      var _didIteratorError5 = false;
-      var _iteratorError5 = undefined;
+      var _iteratorNormalCompletion6 = true;
+      var _didIteratorError6 = false;
+      var _iteratorError6 = undefined;
 
       try {
-        for (var _iterator5 = LocalCache.STORAGES[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-          var _mode = _step5.value;
+        for (var _iterator6 = LocalCache.STORAGES[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+          var _mode = _step6.value;
           steps.push(this[_mode].clean(check));
         }
       } catch (err) {
-        _didIteratorError5 = true;
-        _iteratorError5 = err;
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion5 && _iterator5.return != null) {
-            _iterator5.return();
+          if (!_iteratorNormalCompletion6 && _iterator6.return != null) {
+            _iterator6.return();
           }
         } finally {
-          if (_didIteratorError5) {
-            throw _iteratorError5;
+          if (_didIteratorError6) {
+            throw _iteratorError6;
           }
         }
       }
@@ -3586,9 +3642,8 @@ function get(key) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var url = new URL(key);
   url.searchParams.sort();
-  var storages = options.storages || LocalCache.STORAGES;
   url = url.toString();
-  return localcache.get(url, storages, options.get).then(function (result) {
+  return localcache.get(url, LocalCache.STORAGES, options).then(function (result) {
     var response = new Response({
       url: url,
       body: result.data,
@@ -3602,7 +3657,7 @@ function get(key) {
   });
 }
 
-var localcache$1 = {
+var lc = {
   localcache: localcache,
   set: set,
   get: get
@@ -3656,7 +3711,9 @@ function get$1(url) {
       _options$fullResponse = _options.fullResponse,
       fullResponse = _options$fullResponse === void 0 ? false : _options$fullResponse,
       _options$rawBody = _options.rawBody,
-      rawBody = _options$rawBody === void 0 ? false : _options$rawBody;
+      rawBody = _options$rawBody === void 0 ? false : _options$rawBody,
+      _options$localcache = _options.localcache,
+      localcache = _options$localcache === void 0 ? false : _options$localcache;
   options = Object.assign({}, options, {
     method: 'GET'
   });
@@ -3668,26 +3725,22 @@ function get$1(url) {
     options.params['_' + +new Date()] = '_';
   }
 
-  if (!options.localcache) {
+  if (!localcache) {
     return request(url, options);
   }
 
-  var _options$localcache$s = options.localcache.set,
-      set = _options$localcache$s === void 0 ? false : _options$localcache$s;
-  return localcache$1.get(url, options.localcache).catch(function () {
-    if (!set) {
-      return request(url, options);
-    }
-
+  return lc.get(url, localcache).catch(function () {
     options.fullResponse = true;
     return request(url, options).then(function (response) {
       var isJSON = resJSON(response) || options.type === 'json';
 
-      if (isJSON && !set.mime) {
-        set.mime = 'application/json';
+      if (isJSON && !localcache.mime) {
+        localcache.mime = 'application/json';
+      } else {
+        localcache.mime = response.headers['Content-Type'];
       }
 
-      localcache$1.set(url.toString(), response.body, set);
+      lc.set(url.toString(), response.body, localcache);
 
       if (fullResponse) {
         return response;

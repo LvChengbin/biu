@@ -13,14 +13,10 @@ function set( key, data, options ) {
 function get( key, options = {} ) {
 
     let url = new URL( key ); 
-
     url.searchParams.sort();
-
-    const storages = options.storages || LocalCache.STORAGES;
-
     url = url.toString();
 
-    return localcache.get( url, storages, options.get ).then( result => {
+    return localcache.get( url, LocalCache.STORAGES, options ).then( result => {
         const response = new Response( {
             url,
             body : result.data,

@@ -1,6 +1,6 @@
 import { URL } from '@lvchengbin/url';
 import ajax from './ajax';
-import localcache from './localcache';
+import lc from './localcache';
 import { mergeParams } from './utils';
 
 function resJSON( response ) {
@@ -46,7 +46,8 @@ function get( url, options = {} ) {
     const {
         cache = false,
         fullResponse = false,
-        rawBody = false
+        rawBody = false,
+        localcache = false
     } = options;
 
     options = Object.assign( {}, options, {
@@ -62,27 +63,25 @@ function get( url, options = {} ) {
         options.params[ '_' + +new Date ] = '_';
     }
 
-    if( !options.localcache ) {
+    if( !localcache ) {
         return request( url, options );
     }
 
-    const { set = false } = options.localcache;
+    return lc.get( url, localcache ).catch( () => {
 
-    return localcache.get( url, options.localcache ).catch( () => {
-        if( !set ) {
-            return request( url, options );
-        }
         options.fullResponse = true;
 
         return request( url, options ).then( response => {
 
             const isJSON = ( resJSON( response ) || options.type === 'json' );
 
-            if( isJSON && !set.mime ) {
-                set.mime = 'application/json';
+            if( isJSON && !localcache.mime ) {
+                localcache.mime = 'application/json';
+            } else {
+                localcache.mime = response.headers[ 'Content-Type' ];
             }
 
-            localcache.set( url.toString(), response.body, set );
+            lc.set( url.toString(), response.body, localcache );
 
             if( fullResponse ) {
                 return response;

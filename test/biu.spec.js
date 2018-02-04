@@ -148,9 +148,7 @@ describe( 'biu.get with localcache', () => {
         const options = {
             fullResponse : true,
             localcache : {
-                set : {
-                    page : true
-                }
+                page : true
             }
         };
 
@@ -181,10 +179,8 @@ describe( 'biu.get with localcache', () => {
         const options = {
             fullResponse : true,
             localcache : {
-                set : {
-                    page : {
-                        lifetime : 1
-                    }
+                page : {
+                    lifetime : 1
                 }
             }
         };
@@ -216,14 +212,10 @@ describe( 'biu.get with localcache', () => {
         const options = {
             fullResponse : true,
             localcache : {
-                set : {
-                    page : {
-                        md5 : true
-                    }
+                page : {
+                    md5 : true
                 },
-                get : {
-                    md5 : '44899742450bdb319a869ed7438a61c6'
-                }
+                md5 : '44899742450bdb319a869ed7438a61c6'
             }
         };
 
@@ -255,14 +247,10 @@ describe( 'biu.get with localcache', () => {
         const options = {
             fullResponse : true,
             localcache : {
-                set : {
-                    page : {
-                        md5 : true
-                    }
+                page : {
+                    md5 : true
                 },
-                get : {
-                    md5 : '44899742450bdb319a869ed7438a61c7'
-                }
+                md5 : '44899742450bdb319a869ed7438a61c7'
             }
         };
 
