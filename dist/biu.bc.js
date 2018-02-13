@@ -668,7 +668,8 @@ Promise$1.all = function (promises) {
     try {
       for (var _iterator = promises[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
         var _promise = _step.value;
-        then(_promise, remaining = i++);
+        remaining++;
+        then(_promise, i++);
       }
     } catch (err) {
       _didIteratorError = true;
@@ -683,6 +684,10 @@ Promise$1.all = function (promises) {
           throw _iteratorError;
         }
       }
+    }
+
+    if (!i) {
+      resolve(res);
     }
   });
 };
@@ -1253,79 +1258,96 @@ function () {
 
 var attrs = ['href', 'origin', 'host', 'hash', 'hostname', 'pathname', 'port', 'protocol', 'search', 'username', 'password', 'searchParams'];
 
-var URL$1 = function URL(path, base) {
-  _classCallCheck(this, URL);
+var URL$1 =
+/*#__PURE__*/
+function () {
+  function URL(path, base) {
+    _classCallCheck(this, URL);
 
-  if (window.URL) {
-    var url$$1;
+    if (window.URL) {
+      var url$$1 = new window.URL(path, base);
 
-    if (typeof base === 'undefined') {
-      url$$1 = new window.URL(path);
+      if (!('searchParams' in url$$1)) {
+        url$$1.searchParams = new URLSearchParams(url$$1.search);
+      }
+
+      return url$$1;
     } else {
-      url$$1 = new window.URL(path, base);
-    }
-
-    if (!('searchParams' in url$$1)) {
-      url$$1.searchParams = new URLSearchParams(url$$1.search);
-    }
-
-    return url$$1;
-  } else {
-    if (URL.prototype.isPrototypeOf(path)) {
-      return new URL(path.href);
-    }
-
-    if (URL.prototype.isPrototypeOf(base)) {
-      return new URL(path, base.href);
-    }
-
-    path = String(path);
-
-    if (base !== undefined) {
-      if (!url(base)) {
-        throw new TypeError('Failed to construct "URL": Invalid base URL');
+      if (URL.prototype.isPrototypeOf(path)) {
+        return new URL(path.href);
       }
 
-      if (/^[a-zA-Z][0-9a-zA-Z.-]*:/.test(path)) {
-        base = null;
+      if (URL.prototype.isPrototypeOf(base)) {
+        return new URL(path, base.href);
       }
-    } else {
-      if (!/^[a-zA-Z][0-9a-zA-Z.-]*:/.test(path)) {
-        throw new TypeError('Failed to construct "URL": Invalid URL');
-      }
-    }
 
-    if (base) {
-      base = new URL(base);
+      path = String(path);
 
-      if (path.charAt(0) === '/' && path.charAt(1) === '/') {
-        path = base.protocol + path;
-      } else if (path.charAt(0) === '/') {
-        path = base.origin + path;
+      if (base !== undefined) {
+        if (!url(base)) {
+          throw new TypeError('Failed to construct "URL": Invalid base URL');
+        }
+
+        if (/^[a-zA-Z][0-9a-zA-Z.-]*:/.test(path)) {
+          base = null;
+        }
       } else {
-        path = base.origin + base.pathname.replace(/\/[^/]+\/?$/, '') + '/' + path;
+        if (!/^[a-zA-Z][0-9a-zA-Z.-]*:/.test(path)) {
+          throw new TypeError('Failed to construct "URL": Invalid URL');
+        }
       }
+
+      if (base) {
+        base = new URL(base);
+
+        if (path.charAt(0) === '/' && path.charAt(1) === '/') {
+          path = base.protocol + path;
+        } else if (path.charAt(0) === '/') {
+          path = base.origin + path;
+        } else {
+          var pathname = base.pathname;
+
+          if (pathname.charAt(pathname.length - 1) === '/') {
+            path = base.origin + pathname + path;
+          } else {
+            path = base.origin + pathname.replace(/\/[^/]+\/?$/, '') + '/' + path;
+          }
+        }
+      }
+
+      var dotdot = /([^/])\/[^/]+\/\.\.\//;
+      var dot = /\/\.\//g;
+      path = path.replace(dot, '/');
+
+      while (path.match(dotdot)) {
+        path = path.replace(dotdot, '$1/');
+      }
+
+      var node = document.createElement('a');
+      node.href = path;
+
+      for (var _i = 0; _i < attrs.length; _i++) {
+        var attr = attrs[_i];
+        this[attr] = attr in node ? node[attr] : '';
+      }
+
+      this.searchParams = new URLSearchParams(this.search);
     }
-
-    var dotdot = /([^/])\/[^/]+\/\.\.\//;
-    var dot = /\/\.\//g;
-    path = path.replace(dot, '/');
-
-    while (path.match(dotdot)) {
-      path = path.replace(dotdot, '$1/');
-    }
-
-    var node = document.createElement('a');
-    node.href = path;
-
-    for (var _i = 0; _i < attrs.length; _i++) {
-      var attr = attrs[_i];
-      this[attr] = attr in node ? node[attr] : '';
-    }
-
-    this.searchParams = new URLSearchParams(this.search);
   }
-};
+
+  _createClass(URL, [{
+    key: "toString",
+    value: function toString() {
+      return this.href;
+    }
+  }, {
+    key: "toJSON",
+    value: function toJSON() {
+      return this.href;
+    }
+  }]);
+  return URL;
+}();
 
 var id = 0;
 var prefix = 'biu_jsonp_callback_' + +new Date() + '_' + Math.random().toString().substr(2);
@@ -2728,7 +2750,7 @@ function () {
         mime: options.mime || 'text/plain',
         string: string,
         priority: options.priority === undefined ? 50 : options.priority,
-        ctime: +new Date(),
+        ctime: options.ctime || +new Date(),
         lifetime: options.lifetime || 0
       };
 
@@ -2859,6 +2881,10 @@ function () {
   }, {
     key: "output",
     value: function output(data, storage) {
+      if (!storage) {
+        console.error('Storage type is required.');
+      }
+
       if (!data.string) {
         data.data = JSON.parse(data.data);
       }
@@ -3362,6 +3388,12 @@ function () {
       var _this2 = this;
 
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      if (isObject$2(modes)) {
+        modes = LocalCache.STORAGES;
+        options = modes;
+      }
+
       modes || (modes = LocalCache.STORAGES);
       var steps = [];
 
@@ -3403,26 +3435,18 @@ function () {
       return Sequence.any(steps).then(function (results) {
         var result = results[results.length - 1];
         var value = result.value;
-        var set = [];
-
-        var _loop3 = function _loop3(storage) {
-          if (storage === result.storage) return "break";
-          options[storage] && set.push(function () {
-            return _this2.set(key, value.data, _defineProperty({}, storage, options[storage]));
-          });
-        };
-
+        var store = false;
         var _iteratorNormalCompletion3 = true;
         var _didIteratorError3 = false;
         var _iteratorError3 = undefined;
 
         try {
           for (var _iterator3 = LocalCache.STORAGES[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var storage = _step3.value;
+            var _item = _step3.value;
 
-            var _ret2 = _loop3(storage);
-
-            if (_ret2 === "break") break;
+            if (options[_item] && _item !== value.storage) {
+              store = true;
+            }
           }
         } catch (err) {
           _didIteratorError3 = true;
@@ -3439,7 +3463,9 @@ function () {
           }
         }
 
-        return Sequence.all(set).then(function () {
+        if (!store) return value;
+        var opts = Object.assign(value, options, _defineProperty({}, value.storage, false));
+        return _this2.set(key, value.data, opts).then(function () {
           return value;
         });
       });
@@ -3452,7 +3478,7 @@ function () {
       modes || (modes = LocalCache.STORAGES);
       var steps = [];
 
-      var _loop4 = function _loop4(mode) {
+      var _loop3 = function _loop3(mode) {
         if (!_this3[mode]) {
           throw new TypeError("Unexcepted mode \"".concat(mode, "\", excepted one of: ").concat(LocalCache.STORAGES.join(', ')));
         }
@@ -3470,7 +3496,7 @@ function () {
         for (var _iterator4 = modes[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
           var mode = _step4.value;
 
-          _loop4(mode);
+          _loop3(mode);
         }
       } catch (err) {
         _didIteratorError4 = true;
@@ -3497,7 +3523,7 @@ function () {
       modes || (modes = LocalCache.STORAGES);
       var steps = [];
 
-      var _loop5 = function _loop5(mode) {
+      var _loop4 = function _loop4(mode) {
         if (!_this4[mode]) {
           throw new TypeError("Unexcepted mode \"".concat(mode, "\", excepted one of: ").concat(LocalCache.STORAGES.join(', ')));
         }
@@ -3515,7 +3541,7 @@ function () {
         for (var _iterator5 = modes[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
           var mode = _step5.value;
 
-          _loop5(mode);
+          _loop4(mode);
         }
       } catch (err) {
         _didIteratorError5 = true;

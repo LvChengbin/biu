@@ -95,7 +95,11 @@ Promise$1.all = function( promises ) {
 
         let i = 0;
         for( let promise of promises ) {
-            then( promise, remaining = i++ );
+            remaining++;
+            then( promise, i++ );
+        }
+        if( !i ) {
+            resolve( res );
         }
     } );
 };
@@ -436,12 +440,7 @@ const attrs = [
 class URL$1 {
     constructor( path, base ) {
         if( window.URL ) {
-            let url$$1;
-            if( typeof base === 'undefined' ) {
-                url$$1 = new window.URL( path );
-            } else {
-                url$$1 = new window.URL( path, base );
-            }
+            const url$$1 = new window.URL( path, base );
             if( !( 'searchParams' in url$$1 ) ) {
                 url$$1.searchParams = new URLSearchParams( url$$1.search ); 
             }
@@ -478,7 +477,13 @@ class URL$1 {
                 } else if( path.charAt( 0 ) === '/' ) {
                     path = base.origin + path;
                 } else {
-                    path = base.origin + base.pathname.replace( /\/[^/]+\/?$/, '' ) + '/' + path;
+                    const pathname = base.pathname;
+                    
+                    if( pathname.charAt( pathname.length - 1 ) === '/' ) {
+                        path = base.origin + pathname + path;
+                    } else {
+                        path = base.origin + pathname.replace( /\/[^/]+\/?$/, '' ) + '/' + path;
+                    }
                 }
             }
 
@@ -500,6 +505,13 @@ class URL$1 {
             this.searchParams = new URLSearchParams( this.search ); 
         }
     }
+    toString() {
+        return this.href;
+    }
+    toJSON() {
+        return this.href;
+    }
+
 }
 
 let id = 0;
@@ -1301,7 +1313,7 @@ class Storage {
             mime : options.mime || 'text/plain',
             string,
             priority : options.priority === undefined ? 50 : options.priority,
-            ctime : +new Date,
+            ctime : options.ctime || +new Date,
             lifetime : options.lifetime || 0
         };
 
@@ -1381,6 +1393,10 @@ class Storage {
     }
 
     output( data, storage ) {
+
+        if( !storage ) {
+            console.error( 'Storage type is required.' );
+        }
 
         if( !data.string ) {
             data.data = JSON.parse( data.data );
@@ -1737,6 +1753,12 @@ class LocalCache {
     }
 
     get( key, modes, options = {} ) {
+
+        if( isObject( modes ) ) {
+            modes = LocalCache.STORAGES;
+            options = modes;
+        }
+
         modes || ( modes = LocalCache.STORAGES );
 
         const steps = [];
@@ -1751,19 +1773,22 @@ class LocalCache {
         return Sequence.any( steps ).then( results => {
             const result = results[ results.length - 1 ];
             const value = result.value;
-            const set = [];
 
-            for( let storage of LocalCache.STORAGES ) {
-                if( storage === result.storage ) break;
+            let store = false;
 
-                options[ storage ] && set.push( () => {
-                    return this.set( key, value.data, {
-                        [ storage ] : options[ storage ]
-                    } );
-                } );
+            for( const item of LocalCache.STORAGES ) {
+                if( options[ item ] && item !== value.storage ) {
+                    store = true;
+                }
             }
 
-            return Sequence.all( set ).then( () => value );
+            if( !store ) return value;
+
+            const opts = Object.assign( value, options, {
+                [ value.storage ] : false
+            } );
+
+            return this.set( key, value.data, opts ).then( () => value );
         } );
     }
 
