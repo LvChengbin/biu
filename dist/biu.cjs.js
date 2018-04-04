@@ -1916,8 +1916,8 @@ function get( key, options = {} ) {
 
 var lc = { localcache, set, get };
 
-function resJSON( response ) {
-    return response.headers[ 'Content-Type' ] === 'application/json';
+function resJSON( xhr ) {
+    return /^application\/json;/i.test( xhr.getResponseHeader( 'content-type' ) );
 }
 
 function request( url, options = {} ) {
@@ -1930,6 +1930,8 @@ function request( url, options = {} ) {
         const password = options.auth.password || '';
         options.headers.Authorization = 'Basic ' + btoa( username + ':' + password );
     }
+
+    options.xhr || ( options.xhr =  new XMLHttpRequest() );
 
     return ajax( url, options ).then( response => {
         const status = response.status;
@@ -1946,7 +1948,7 @@ function request( url, options = {} ) {
             return response.body;
         }
 
-        if( resJSON( response ) || options.type === 'json' ) {
+        if( resJSON( options.xhr ) || options.type === 'json' ) {
             return response.json();
         }
 
@@ -1984,9 +1986,11 @@ function get$1( url, options = {} ) {
 
         options.fullResponse = true;
 
+        options.xhr || ( options.xhr = new XMLHttpRequest() );
+
         return request( url, options ).then( response => {
 
-            const isJSON = ( resJSON( response ) || options.type === 'json' );
+            const isJSON = ( resJSON( options.xhr ) || options.type === 'json' );
 
             if( !localcache.mime ) {
                 if( isJSON ) {

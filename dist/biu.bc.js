@@ -3689,8 +3689,8 @@ var lc = {
   get: get
 };
 
-function resJSON(response) {
-  return response.headers['Content-Type'] === 'application/json';
+function resJSON(xhr) {
+  return /^application\/json;/i.test(xhr.getResponseHeader('content-type'));
 }
 
 function request(url) {
@@ -3706,6 +3706,7 @@ function request(url) {
     options.headers.Authorization = 'Basic ' + btoa(username + ':' + password);
   }
 
+  options.xhr || (options.xhr = new XMLHttpRequest());
   return ajax(url, options).then(function (response) {
     var status = response.status;
 
@@ -3721,7 +3722,7 @@ function request(url) {
       return response.body;
     }
 
-    if (resJSON(response) || options.type === 'json') {
+    if (resJSON(options.xhr) || options.type === 'json') {
       return response.json();
     }
 
@@ -3757,8 +3758,9 @@ function get$1(url) {
 
   return lc.get(url, localcache).catch(function () {
     options.fullResponse = true;
+    options.xhr || (options.xhr = new XMLHttpRequest());
     return request(url, options).then(function (response) {
-      var isJSON = resJSON(response) || options.type === 'json';
+      var isJSON = resJSON(options.xhr) || options.type === 'json';
 
       if (!localcache.mime) {
         if (isJSON) {

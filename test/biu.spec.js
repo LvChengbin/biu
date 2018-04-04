@@ -40,7 +40,7 @@ describe( 'biu.get without localcache', () => {
                 'x-custom-header' : 'ajax'
             }
         } ).then( response => {
-            expect( JSON.parse( response ) ).toEqual( {
+            expect( response ).toEqual( {
                 query : {
                     x : '1',
                     y : '2'
@@ -323,7 +323,7 @@ describe( 'biu.post', () => {
                 'x-custom-header' : 'ajax'
             }
         } ).then( response => {
-            expect( JSON.parse( response ) ).toEqual( {
+            expect( response ).toEqual( {
                 query : {
                     x : '1',
                     y : '2'
@@ -349,7 +349,7 @@ describe( 'biu.post', () => {
                 'Content-Type' : 'text/plain'
             }
         } ).then( response => {
-            expect( JSON.parse( response ) ).toEqual( {
+            expect( response ).toEqual( {
                 query : {
                     x : '1',
                     y : '2'
@@ -375,7 +375,7 @@ describe( 'biu.post', () => {
                 'content-type' : 'multipart/form-data'
             }
         } ).then( response => {
-            expect( JSON.parse( response ) ).toEqual( {
+            expect( response ).toEqual( {
                 query : {
                     x : '1',
                     y : '2'
