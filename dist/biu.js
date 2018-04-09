@@ -1940,7 +1940,7 @@ function request( url, options = {} ) {
     return ajax( url, options ).then( response => {
         const status = response.status;
 
-        if( status < 200 && status >= 300 ) {
+        if( status < 200 || status >= 300 ) {
             throw response;
         }
 

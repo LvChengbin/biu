@@ -3710,7 +3710,7 @@ function request(url) {
   return ajax(url, options).then(function (response) {
     var status = response.status;
 
-    if (status < 200 && status >= 300) {
+    if (status < 200 || status >= 300) {
       throw response;
     }
 
