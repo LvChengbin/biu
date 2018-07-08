@@ -851,6 +851,22 @@ var is = {
     generator
 };
 
+const assign = ( dest, ...sources ) => {
+    if( isFunction( Object.assign ) ) {
+        return Object.assign( dest, ...sources );
+    }
+    const obj = sources[ 0 ];
+    for( let property in obj ) {
+        if( obj.hasOwnProperty( property ) ) {
+            dest[ property ] = obj[ property ];
+        }
+    }
+    if( sources.length > 1 ) {
+        return assign( dest, ...sources.splice( 1, sources.length - 1 ) );
+    }
+    return dest;
+};
+
 const Response = class {
     constructor( {
         status = 200,
@@ -862,7 +878,7 @@ const Response = class {
         if( !is.string( body ) ) {
             return new TypeError( 'Response body must be a string "' + body + '"' );
         }
-        Object.assign( this, { 
+        assign( this, { 
             body,
             status,
             statusText,
@@ -1179,7 +1195,7 @@ class EventEmitter {
     }
 }
 
-function assign( dest, ...sources ) {
+function assign$2( dest, ...sources ) {
     if( isFunction( Object.assign ) ) {
         return Object.assign( dest, ...sources );
     }
@@ -1190,7 +1206,7 @@ function assign( dest, ...sources ) {
         }
     }
     if( sources.length > 1 ) {
-        return assign( dest, ...sources.splice( 1, sources.length - 1 ) );
+        return assign$2( dest, ...sources.splice( 1, sources.length - 1 ) );
     }
     return dest;
 }
@@ -1221,7 +1237,7 @@ class Sequence extends EventEmitter {
         this.muteEndIfEmpty = !!options.emitEndIfEmpty;
         this.interval = options.interval || 0;
 
-        assign( this, config() );
+        assign$2( this, config() );
 
         if( steps && steps.length ) {
             this.append( steps );
@@ -1271,7 +1287,7 @@ class Sequence extends EventEmitter {
     }
 
     clear() {
-        assign( this, config() );
+        assign$2( this, config() );
     }
 
     next( inner = false ) {
@@ -1427,7 +1443,7 @@ Sequence.FAILED = 0;
 
 Sequence.Error = class {
     constructor( options ) {
-        assign( this, options );
+        assign$2( this, options );
     }
 };
 
@@ -2294,7 +2310,7 @@ function get$1( url, options = {} ) {
         localcache = false
     } = options;
 
-    options = Object.assign( {}, options, {
+    options = assign( {}, options, {
         method : 'GET'
     } );
 

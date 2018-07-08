@@ -2,6 +2,7 @@ import { URL } from '@lvchengbin/url';
 import ajax from './ajax';
 import lc from './localcache';
 import { mergeParams } from './utils';
+import assign from '@lvchengbin/kit/src/object-assign';
 
 function resJSON( xhr ) {
     return /^application\/json;/i.test( xhr.getResponseHeader( 'content-type' ) );
@@ -52,7 +53,7 @@ function get( url, options = {} ) {
         localcache = false
     } = options;
 
-    options = Object.assign( {}, options, {
+    options = assign( {}, options, {
         method : 'GET'
     } );
 

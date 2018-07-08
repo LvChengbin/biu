@@ -1,4 +1,5 @@
 import is from '@lvchengbin/is';
+import assign from '@lvchengbin/kit/src/object-assign';
 
 const Response = class {
     constructor( {
@@ -11,7 +12,7 @@ const Response = class {
         if( !is.string( body ) ) {
             return new TypeError( 'Response body must be a string "' + body + '"' );
         }
-        Object.assign( this, { 
+        assign( this, { 
             body,
             status,
             statusText,

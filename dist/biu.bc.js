@@ -906,6 +906,25 @@ var is = {
     generator: generator
 };
 
+var assign = function ( dest ) {
+    var sources = [], len = arguments.length - 1;
+    while ( len-- > 0 ) sources[ len ] = arguments[ len + 1 ];
+
+    if( isFunction( Object.assign ) ) {
+        return Object.assign.apply( Object, [ dest ].concat( sources ) );
+    }
+    var obj = sources[ 0 ];
+    for( var property in obj ) {
+        if( obj.hasOwnProperty( property ) ) {
+            dest[ property ] = obj[ property ];
+        }
+    }
+    if( sources.length > 1 ) {
+        return assign.apply( void 0, [ dest ].concat( sources.splice( 1, sources.length - 1 ) ) );
+    }
+    return dest;
+};
+
 var Response = (function () {
     function Response( ref ) {
     var status = ref.status; if ( status === void 0 ) status = 200;
@@ -917,7 +936,7 @@ var Response = (function () {
         if( !is.string( body ) ) {
             return new TypeError( 'Response body must be a string "' + body + '"' );
         }
-        Object.assign( this, { 
+        assign( this, { 
             body: body,
             status: status,
             statusText: statusText,
@@ -1280,7 +1299,7 @@ defaultExport.prototype.removeAllListeners = function removeAllListeners ( rule 
     return this;
 };
 
-function assign( dest ) {
+function assign$2( dest ) {
     var sources = [], len = arguments.length - 1;
     while ( len-- > 0 ) sources[ len ] = arguments[ len + 1 ];
 
@@ -1294,7 +1313,7 @@ function assign( dest ) {
         }
     }
     if( sources.length > 1 ) {
-        return assign.apply( void 0, [ dest ].concat( sources.splice( 1, sources.length - 1 ) ) );
+        return assign$2.apply( void 0, [ dest ].concat( sources.splice( 1, sources.length - 1 ) ) );
     }
     return dest;
 }
@@ -1328,7 +1347,7 @@ var Sequence = (function (EventEmitter$$1) {
         this.muteEndIfEmpty = !!options.emitEndIfEmpty;
         this.interval = options.interval || 0;
 
-        assign( this, config() );
+        assign$2( this, config() );
 
         if( steps && steps.length ) {
             this.append( steps );
@@ -1386,7 +1405,7 @@ var Sequence = (function (EventEmitter$$1) {
     };
 
     Sequence.prototype.clear = function clear () {
-        assign( this, config() );
+        assign$2( this, config() );
     };
 
     Sequence.prototype.next = function next ( inner ) {
@@ -1568,7 +1587,7 @@ Sequence.FAILED = 0;
 
 Sequence.Error = (function () {
     function Error( options ) {
-        assign( this, options );
+        assign$2( this, options );
     }
 
     return Error;
@@ -2534,7 +2553,7 @@ function get$1( url, options ) {
     var rawBody = options.rawBody; if ( rawBody === void 0 ) rawBody = false;
     var localcache = options.localcache; if ( localcache === void 0 ) localcache = false;
 
-    options = Object.assign( {}, options, {
+    options = assign( {}, options, {
         method : 'GET'
     } );
 

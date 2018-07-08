@@ -1,6 +1,6 @@
 {
     "name": "@lvchengbin/biu",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "description": "",
     "keywords": [
         "biu",
@@ -35,7 +35,7 @@
     "scripts": {
         "build": "rollup -c",
         "test": "karma start",
-        "test-es5" : "karma start --es5=true",
+        "test-es5": "karma start --es5=true",
         "test-ajax": "karma start --file=test/ajax.spec.js",
         "test-jsonp": "karma start --file=test/jsonp.spec.js",
         "test-biu": "karma start --file=test/biu.spec.js",
@@ -53,6 +53,7 @@
     "license": "MIT",
     "dependencies": {
         "@lvchengbin/is": "^0.0.17",
+        "@lvchengbin/kit": "0.0.0",
         "@lvchengbin/localcache": "^0.2.4",
         "@lvchengbin/promise": "^1.1.7",
         "@lvchengbin/url": "^0.1.5",
