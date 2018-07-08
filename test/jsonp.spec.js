@@ -1,9 +1,8 @@
 import jsonp from '../src/jsonp';    
-import config from './config';
 
 describe( 'jsonp', () => {
     it( 'jsonp without specifying a callback function name', done => {
-        const api = config.api + '/jsonp';
+        const api = `${__yolk__.server}/test/ajax/jsonp`;
         jsonp( api, {
             data : {
                 x : 1,
@@ -19,7 +18,7 @@ describe( 'jsonp', () => {
     } );
 
     it( 'jsonp with specifying a callback function name', done => {
-        const api = config.api + '/jsonp';
+        const api = `${__yolk__.server}/test/ajax/jsonp`;
         jsonp( api, {
             data : {
                 callback : 'xxxxxxxx',
@@ -36,7 +35,7 @@ describe( 'jsonp', () => {
     } );
 
     it( 'removed callback function after executing', done => {
-        const api = config.api + '/jsonp';
+        const api = `${__yolk__.server}/test/ajax/jsonp`;
         jsonp( api, {
             data : {
                 callback : 'xyz'

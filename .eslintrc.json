@@ -7,10 +7,14 @@
     "globals" : {
         "define" : true,
         "describe" : true,
+        "xdescribe" : true,
         "it" : true,
+        "xit" : true,
         "expect" : true,
         "J" : true,
-        "Jaunty" : true
+        "Jaunty" : true,
+        "__karma__" : true,
+        "__yolk__" : true
     },
     "extends": "eslint:recommended",
     "parserOptions": {

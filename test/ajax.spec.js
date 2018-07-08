@@ -1,10 +1,9 @@
 import { URLSearchParams } from '@lvchengbin/url';
 import ajax from '../src/ajax';
-import config from './config';
 
 describe( 'ajax', () => {
     it( 'get', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
         ajax( api, {
             headers : {
                 'x-custom-header' : 'ajax'
@@ -26,7 +25,7 @@ describe( 'ajax', () => {
     } );
 
     it( 'get 404', done => {
-        const api = config.api + '/deserted';
+        const api = `${__yolk__.server}/test/ajax/notfound`;
         ajax( api, {
             headers : {
                 'x-custom-header' : 'ajax'
@@ -40,7 +39,7 @@ describe( 'ajax', () => {
     } );
 
     it( 'post urlencoded', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/post?x=1&y=2`;
         ajax( api, {
             method : 'post',
             data : new URLSearchParams( {
@@ -72,7 +71,7 @@ describe( 'ajax', () => {
     } );
 
     it( 'post text/plain', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/post?x=1&y=2`;
         ajax( api, {
             method : 'post',
             data : 'ajax',
@@ -100,7 +99,7 @@ describe( 'ajax', () => {
         formdata.append( 'x', 1 );
         formdata.append( 'y', 2 );
 
-        const api = config.api + '/formdata?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/formdata?x=1&y=2`;
         ajax( api, {
             method : 'post',
             data : formdata,

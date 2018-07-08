@@ -1,5 +1,20 @@
 'use strict';
 
+/**
+ * async function
+ *
+ * @syntax: 
+ *  async function() {}
+ *  async () => {}
+ *  async x() => {}
+ *
+ * @compatibility
+ * IE: no
+ * Edge: >= 15
+ * Android: >= 5.0
+ *
+ */
+
 var asyncFunction = fn => ( {} ).toString.call( fn ) === '[object AsyncFunction]';
 
 var isFunction = fn => ({}).toString.call( fn ) === '[object Function]' || asyncFunction( fn );
@@ -78,9 +93,9 @@ Promise$1.all = function( promises ) {
             }
             p.then( value => {
                 res[ i ] = value;
-                if( --remaining === 0 ) {
-                    resolve( res );
-                }
+                setTimeout( () => {
+                    if( --remaining === 0 ) resolve( res );
+                }, 0 );
             }, reason => {
                 if( !rejected ) {
                     reject( reason );
@@ -236,59 +251,104 @@ function promiseReject( promise, value ) {
 
 var isString = str => typeof str === 'string' || str instanceof String;
 
+var number = ( n, strict = false ) => {
+    if( ({}).toString.call( n ).toLowerCase() === '[object number]' ) {
+        return true;
+    }
+    if( strict ) return false;
+    return !isNaN( parseFloat( n ) ) && isFinite( n )  && !/\.$/.test( n );
+};
+
+var integer = ( n, strict = false ) => {
+
+    if( number( n, true ) ) return n % 1 === 0;
+
+    if( strict ) return false;
+
+    if( isString( n ) ) {
+        if( n === '-0' ) return true;
+        return n.indexOf( '.' ) < 0 && String( parseInt( n ) ) === n;
+    }
+
+    return false;
+}
+
+var isIPv4 = ip => {
+    if( !isString( ip ) ) return false;
+    const pieces = ip.split( '.' );
+    if( pieces.length !== 4 ) return false;
+
+    for( const i of pieces ) {
+        if( !integer( i ) ) return false;
+        if( i < 0 || i > 255 ) return false;
+    }
+    return true;
+};
+
+/**
+ * <user>:<password> can only be supported with FTP scheme on IE9/10/11
+ */
+
 var url = url => {
     if( !isString( url ) ) return false;
+
     if( !/^(https?|ftp):\/\//i.test( url ) ) return false;
     const a = document.createElement( 'a' );
     a.href = url;
-    return /^(https?|ftp):/i.test( a.protocol );
-};
 
-function supportIterator() {
+    /**
+     * In IE, sometimes a.protocol would be an unknown type
+     * Getting a.protocol will throw Error: Invalid argument in IE
+     */
     try {
-        return !!Symbol.iterator;
+        if( !isString( a.protocol ) ) return false;
     } catch( e ) {
         return false;
     }
-}
+
+    if( !/^(https?|ftp):/i.test( a.protocol ) ) return false;
+
+    /**
+     * In IE, invalid IP address could be a valid hostname
+     */
+    if( /^(\d+\.){3}\d+$/.test( a.hostname ) && !isIPv4( a.hostname ) ) return false;
+
+    return true;
+};
 
 const decode = str => decodeURIComponent( String( str ).replace( /\+/g, ' ' ) );
 
 class URLSearchParams {
     constructor( init ) {
-        if( window.URLSearchParams ) {
-            return new window.URLSearchParams( init );
-        } else {
-            this.dict = [];
+        this.dict = [];
 
-            if( !init ) return;
+        if( !init ) return;
 
-            if( URLSearchParams.prototype.isPrototypeOf( init ) ) {
-                return new URLSearchParams( init.toString() );
+        if( URLSearchParams.prototype.isPrototypeOf( init ) ) {
+            return new URLSearchParams( init.toString() );
+        }
+
+        if( Array.isArray( init ) ) {
+            throw new TypeError( 'Failed to construct "URLSearchParams": The provided value cannot be converted to a sequence.' );
+        }
+
+        if( typeof init === 'string' ) {
+            if( init.charAt(0) === '?' ) {
+                init = init.slice( 1 );
             }
-
-            if( Array.isArray( init ) ) {
-                throw new TypeError( 'Failed to construct "URLSearchParams": The provided value cannot be converted to a sequence.' );
+            const pairs = init.split( /&+/ );
+            for( const item of pairs ) {
+                const index = item.indexOf( '=' );
+                this.append(
+                    index > -1 ? item.slice( 0, index ) : item,
+                    index > -1 ? item.slice( index + 1 ) : ''
+                );
             }
+            return;
+        }
 
-            if( typeof init === 'string' ) {
-                if( init.charAt(0) === '?' ) {
-                    init = init.slice( 1 );
-                }
-                const pairs = init.split( /&+/ );
-                for( const item of pairs ) {
-                    const index = item.indexOf( '=' );
-                    this.append(
-                        index > -1 ? item.slice( 0, index ) : item,
-                        index > -1 ? item.slice( index + 1 ) : ''
-                    );
-                }
-                return;
-            }
-
-            for( let attr in init ) {
-                this.append( attr, init[ attr ] );
-            }
+        for( let attr in init ) {
+            this.append( attr, init[ attr ] );
         }
     }
     append( name, value ) {
@@ -360,20 +420,8 @@ class URLSearchParams {
         for( let item of this.dict ) {
             dict.push( [ item[ 0 ], item[ 1 ] ] );
         }
-
-        return !supportIterator() ? dict : ( {
-            [Symbol.iterator]() {
-                return {
-                    next() {
-                        const value = dict.shift();
-                        return {
-                            done : value === undefined,
-                            value 
-                        };
-                    }
-                };
-            }
-        } );
+        
+        return dict;
     }
 
     keys() {
@@ -382,19 +430,7 @@ class URLSearchParams {
            keys.push( item[ 0 ] );
         }
 
-        return !supportIterator() ? keys : ( {
-            [Symbol.iterator]() {
-                return {
-                    next() {
-                        const value = keys.shift();
-                        return {
-                            done : value === undefined,
-                            value
-                        };
-                    }
-                };
-            }
-        } );
+        return keys;
     }
 
     values() {
@@ -403,19 +439,7 @@ class URLSearchParams {
            values.push( item[ 1 ] );
         }
 
-        return !supportIterator() ? values : ( {
-            [Symbol.iterator]() {
-                return {
-                    next() {
-                        const value = values.shift();
-                        return {
-                            done : value === undefined,
-                            value
-                        };
-                    }
-                };
-            }
-        } );
+        return values;
     }
 
     toString() {
@@ -427,6 +451,8 @@ class URLSearchParams {
     }
 }
 
+const g = typeof global === 'undefined' ? window : global;
+
 const attrs = [
     'href', 'origin',
     'host', 'hash', 'hostname',  'pathname', 'port', 'protocol', 'search',
@@ -435,8 +461,8 @@ const attrs = [
 
 class URL$1 {
     constructor( path, base ) {
-        if( window.URL ) {
-            const url$$1 = new window.URL( path, base );
+        if( g.URL && new g.URL( 'http://a.com' ).protocol ) {
+            const url$$1 = new g.URL( path, base );
             if( !( 'searchParams' in url$$1 ) ) {
                 url$$1.searchParams = new URLSearchParams( url$$1.search ); 
             }
@@ -497,6 +523,20 @@ class URL$1 {
 
             for( const attr of attrs ) {
                 this[ attr ] = attr in node ? node[ attr ] : '';
+            }
+
+            /**
+             * set origin for IE
+             */
+            if( !this.origin ) {
+                this.origin = this.protocol + '//' + this.host;
+            }
+
+            /**
+             * add a slash before the path for IE
+             */
+            if( this.pathname && this.pathname.charAt( 0 ) !== '/' ) {
+                this.pathname = '/' + this.pathname;
             }
             this.searchParams = new URLSearchParams( this.search ); 
         }
@@ -590,6 +630,15 @@ var isArguments = obj => ({}).toString.call( obj ) === '[object Arguments]';
 
 var array = obj => Array.isArray( obj );
 
+/**
+ * arrow function
+ *
+ * Syntax: () => {}
+ *
+ * IE : no
+ * Android : >= 5.0
+ */
+
 var arrowFunction = fn => {
     if( !isFunction( fn ) ) return false;
     return /^(?:function)?\s*\(?[\w\s,]*\)?\s*=>/.test( fn.toString() );
@@ -597,17 +646,17 @@ var arrowFunction = fn => {
 
 var isBoolean = s => typeof s === 'boolean';
 
-var isDate = date => ({}).toString.call( date ) === '[object Date]';
+var date = date => ({}).toString.call( date ) === '[object Date]';
 
 var email = str => /^(([^#$%&*!+-/=?^`{|}~<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i.test( str );
 
-var isObject = obj => obj && typeof obj === 'object' && !Array.isArray( obj );
+var object = obj => obj && typeof obj === 'object' && !Array.isArray( obj );
 
 var empty = obj => {
     if( array( obj ) || isString( obj ) ) {
         return !obj.length;
     }
-    if( isObject( obj ) ) {
+    if( object( obj ) ) {
         return !Object.keys( obj ).length;
     }
     return !obj;
@@ -623,27 +672,16 @@ var isFalse = ( obj, generalized = true ) => {
     return !obj;
 };
 
-var isNumber = ( n, strict = false ) => {
-    if( ({}).toString.call( n ).toLowerCase() === '[object number]' ) {
-        return true;
-    }
-    if( strict ) return false;
-    return !isNaN( parseFloat( n ) ) && isFinite( n )  && !/\.$/.test( n );
-};
-
-var integer = ( n, strict = false ) => {
-
-    if( isNumber( n, true ) ) return n % 1 === 0;
-
-    if( strict ) return false;
-
-    if( isString( n ) ) {
-        if( n === '-0' ) return true;
-        return n.indexOf( '.' ) < 0 && String( parseInt( n ) ) === n;
-    }
-
-    return false;
-}
+/**
+ * iterable
+ *
+ * @compatibility
+ *
+ * IE: no
+ * Edge: >= 13
+ * Android: >= 5.0
+ *  
+ */
 
 var iterable = obj => {
     try {
@@ -656,7 +694,7 @@ var iterable = obj => {
 // https://github.com/jquery/jquery/blob/2d4f53416e5f74fa98e0c1d66b6f3c285a12f0ce/test/data/jquery-1.9.1.js#L480
 
 var plainObject = obj => {
-    if( !isObject( obj ) ) {
+    if( !object( obj ) ) {
         return false;
     }
 
@@ -692,13 +730,95 @@ var elementNode = node$$1 => node( node$$1 ) && node$$1.nodeType === 1;
 
 var isWindow = obj => obj && obj === obj.window;
 
+var isClass = obj => isFunction( obj ) && /^\s*class\s+/.test( obj.toString() );
+
+var isIPv6 = ip => {
+    /**
+     * An IPv6 address should have at least one colon(:)
+     */
+    if( ip.indexOf( ':' ) < 0 ) return false;
+
+    /**
+     * An IPv6 address can start or end with '::', but cannot start or end with a single colon.
+     */
+    if( /(^:[^:])|([^:]:$)/.test( ip ) ) return false;
+
+    /**
+     * An IPv6 address should consist of colon(:), dot(.) and hexadecimel
+     */
+    if( !/^[0-9A-Fa-f:.]{2,}$/.test( ip ) ) return false;
+
+    /**
+     * An IPv6 address should not have any sequence like:
+     * 1. a hexadecimal that it's length greater than 4
+     * 2. three or more continous colons
+     * 3. two or more continous dots
+     */
+    if( /[0-9A-Fa-f]{5,}|:{3,}|\.{2,}/.test( ip ) ) return false;
+
+    /**
+     * In an IPv6 address, the "::" can only appear once.
+     */
+    if( ip.split( '::' ).length > 2 ) return false;
+
+    /**
+     * if the IPv6 address is in mixed form.
+     */
+    if( ip.indexOf( '.' ) > -1 ) {
+        const lastColon = ip.lastIndexOf( ':' );
+        const hexadecimal = ip.substr( 0, lastColon );
+        const decimal = ip.substr( lastColon + 1 );
+        /**
+         * the decimal part should be an valid IPv4 address.
+         */
+        if( !isIPv4( decimal ) ) return false;
+
+        /**
+         * the length of the hexadecimal part should less than 6.
+         */
+        if( hexadecimal.split( ':' ).length > 6 ) return false;
+    } else {
+        /**
+         * An IPv6 address that is not in mixed form can at most have 8 hexadecimal sequences.
+         */
+        if( ip.split( ':' ).length > 8 ) return false;
+    }
+    return true;
+};
+
+var isIP = ip => isIPv4( ip ) || isIPv6( ip );
+
+/**
+ * Private IPv4 address
+ *
+ * 10.0.0.0 ~ 10.255.255.255
+ * 172.16.0.0 ~ 172.31.255.255
+ * 192.168.0.0 ~ 192.168.255.255
+ */
+
+var isPrivateIPv4 = ip => {
+    if( !isIPv4( ip ) ) return false;
+    if( /^10\..*/.test( ip ) ) return true;
+    if( /^192\.168\..*/.test( ip ) ) return true;
+    if( /^172\.(1[6-9]|2[0-9]|3[0-1])\..*/.test( ip ) ) return true;
+    return false;
+};
+
+var generator = fn => {
+    try {
+        return new Function( 'fn', 'return fn.constructor === (function*(){}).constructor' )( fn );
+    } catch( e ) {
+        return false;
+    }
+}
+
 var is = {
     arguments : isArguments,
     array,
     arrowFunction,
     asyncFunction,
     boolean : isBoolean,
-    date: isDate,
+    date,
     email,
     empty,
     error,
@@ -706,8 +826,8 @@ var is = {
     function : isFunction,
     integer,
     iterable,
-    number: isNumber,
-    object: isObject,
+    number,
+    object,
     plainObject,
     promise: isPromise,
     regexp: isRegExp,
@@ -718,7 +838,13 @@ var is = {
     node,
     textNode,
     elementNode,
-    window : isWindow
+    window : isWindow,
+    class : isClass,
+    ip : isIP,
+    ipv4 : isIPv4,
+    ipv6 : isIPv6,
+    privateIPv4 : isPrivateIPv4,
+    generator
 };
 
 const Response = class {
@@ -841,18 +967,168 @@ var ajax = ( url, options = {} ) => {
     } );
 };
 
-class EventEmitter {
-    constructor() {
-        this.__listeners = {};
+function find( haystack, key ) {
+    for( let item of haystack ) {
+        if( item[ 0 ] === key ) return item;
+    }
+    return false;
+}
+
+class Map {
+    constructor( iterable = [] ) {
+        if( !( this instanceof Map ) ) {
+            throw new TypeError( 'Constructor Map requires \'new\'' );
+        }
+        this.map = iterable || [];
+    }
+    get size() {
+        return this.map.length;
     }
 
-    alias( name, to ) {
-        this[ name ] = this[ to ].bind( this );
+    get( key ) {
+        const data = find( this.map, key );
+        return data ? data[ 1 ] : undefined;
+    }
+
+    set( key, value ) {
+        const data = find( this.map, key );
+        if( data ) {
+            data[ 1 ] = value;
+        } else {
+            this.map.push( [ key, value ] );
+        }
+        return this;
+    }
+
+    delete( key ) {
+        for( let i = 0, l = this.map.length; i < l; i += 1 ) {
+            const item = this.map[ i ];
+            if( item[ 0 ] === key ) {
+                this.map.splice( i, 1 );
+                return true;
+            }
+            
+        }
+        return false;
+    }
+
+    clear() {
+        this.map= [];
+    }
+
+    forEach( callback, thisArg ) {
+        isUndefined( thisArg ) && ( this.Arg = this );
+        for( let item of this.map ) {
+            callback.call( thisArg, item[ 1 ], item[ 0 ], this );
+        }
+    }
+
+    has( key ) {
+        return !!find( this.map, key );
+    }
+
+    keys() {
+        const keys = [];
+        for( let item of this.map ) {
+            keys.push( item[ 0 ] );
+        }
+        return keys;
+    }
+
+    entries() {
+        return this.map;
+    }
+
+    values() {
+        const values = [];
+        for( let item of this.map ) {
+            values.push( item[ 1 ] );
+        }
+        return values;
+    }
+}
+
+class Set {
+    constructor( iterable = [] ) {
+        if( !( this instanceof Set ) ) {
+            throw new TypeError( 'Constructor Set requires \'new\'' );
+        }
+        this.set = [];
+
+        if( iterable && iterable.length ) {
+            for( let item of iterable ) this.add( item );
+        }
+    }
+
+    get size() {
+        return this.set.length;
+    }
+
+    add( value ) {
+        const i = this.set.indexOf( value );
+        if( i > -1 ) {
+            this.set[ i ] = value;
+        } else {
+            this.set.push( value );
+        }
+        return this;
+    }
+
+    delete( value ) {
+        const i = this.set.indexOf( value );
+        if( i > -1 ) {
+            this.set.splice( i, 1 );
+            return true;
+        }
+        return false;
+    }
+
+    clear() {
+        this.set = [];
+    }
+
+    forEach( callback, thisArg ) {
+        isUndefined( thisArg ) && ( this.Arg = this );
+        for( let item of this.set ) {
+            callback.call( thisArg, item, item, this );
+        }
+    }
+
+    has( value ) {
+        return this.set.indexOf( value ) > -1;
+    }
+
+    keys() {
+        return this.values();
+    }
+
+    entries() {
+        const res = [];
+        for( let item of this.set ) {
+            res.push( [ item, item ] ); 
+        }
+        return res;
+    }
+
+    values() {
+        return this.set;
+    }
+}
+
+class EventEmitter {
+    constructor() {
+        this.__listeners = new Map();
     }
 
     on( evt, handler ) {
         const listeners = this.__listeners;
-        listeners[ evt ] ? listeners[ evt ].push( handler ) : ( listeners[ evt ] = [ handler ] );
+        let handlers = listeners.get( evt );
+
+        if( !handlers ) {
+            handlers = new Set();
+            listeners.set( evt, handlers );
+        }
+        handlers.add( handler );
         return this;
     }
 
@@ -865,35 +1141,16 @@ class EventEmitter {
     }
 
     removeListener( evt, handler ) {
-        var listeners = this.__listeners,
-            handlers = listeners[ evt ];
-
-        if( !handlers || ! handlers.length ) {
-            return this;
-        }
-
-        for( let i = 0; i < handlers.length; i += 1 ) {
-            handlers[ i ] === handler && ( handlers[ i ] = null );
-        }
-
-        setTimeout( () => {
-            for( let i = 0; i < handlers.length; i += 1 ) {
-                handlers[ i ] || handlers.splice( i--, 1 );
-            }
-        }, 0 );
-
+        const listeners = this.__listeners;
+        const handlers = listeners.get( evt );
+        handlers && handlers.delete( handler );
         return this;
     }
 
     emit( evt, ...args ) {
-        const handlers = this.__listeners[ evt ];
-        if( handlers ) {
-            for( let i = 0, l = handlers.length; i < l; i += 1 ) {
-                handlers[ i ] && handlers[ i ].call( this, ...args );
-            }
-            return true;
-        }
-        return false;
+        const handlers = this.__listeners.get( evt );
+        if( !handlers ) return false;
+        handlers.forEach( handler => handler.call( this, ...args ) );
     }
 
     removeAllListeners( rule ) {
@@ -910,13 +1167,28 @@ class EventEmitter {
         }
 
         const listeners = this.__listeners;
-        for( let attr in listeners ) {
-            if( checker( attr ) ) {
-                listeners[ attr ] = null;
-                delete listeners[ attr ];
-            }
+
+        listeners.forEach( ( value, key ) => {
+            checker( key ) && listeners.delete( key );
+        } );
+        return this;
+    }
+}
+
+function assign( dest, ...sources ) {
+    if( isFunction( Object.assign ) ) {
+        return Object.assign( dest, ...sources );
+    }
+    const obj = sources[ 0 ];
+    for( let property in obj ) {
+        if( obj.hasOwnProperty( property ) ) {
+            dest[ property ] = obj[ property ];
         }
     }
+    if( sources.length > 1 ) {
+        return assign( dest, ...sources.splice( 1, sources.length - 1 ) );
+    }
+    return dest;
 }
 
 function config() {
@@ -942,11 +1214,28 @@ class Sequence extends EventEmitter {
         this.running = false;
         this.suspended = false;
         this.suspendTimeout = null;
+        this.muteEndIfEmpty = !!options.emitEndIfEmpty;
         this.interval = options.interval || 0;
 
-        Object.assign( this, config() );
+        assign( this, config() );
 
-        steps && this.append( steps );
+        if( steps && steps.length ) {
+            this.append( steps );
+        } else if( !this.muteEndIfEmpty ) {
+            if( typeof process === 'object' && isFunction( process.nextTick ) ) {
+                process.nextTick( () => {
+                    this.emit( 'end', this.results, this );
+                } );
+            } else if( typeof setImmediate === 'function' ) {
+                setImmediate( () => {
+                    this.emit( 'end', this.results, this );
+                } );
+            } else {
+                setTimeout( () => {
+                    this.emit( 'end', this.results, this );
+                }, 0 );
+            }
+        }
 
         options.autorun !== false && setTimeout( () => {
             this.run();
@@ -978,7 +1267,7 @@ class Sequence extends EventEmitter {
     }
 
     clear() {
-        Object.assign( this, config() );
+        assign( this, config() );
     }
 
     next( inner = false ) {
@@ -1011,18 +1300,25 @@ class Sequence extends EventEmitter {
         
         return this.promise = this.promise.then( () => {
             const step = this.steps[ this.index ];
-            let promise = step(
-                this.results[ this.results.length - 1 ],
-                this.index,
-                this.results
-            );
-            /**
-             * if the step function doesn't return a promise instance,
-             * create a resolved promise instance with the returned value as its value
-             */
-            if( !isPromise( promise ) ) {
-                promise = Promise$1.resolve( promise );
+            let promise;
+
+            try {
+                promise = step(
+                    this.results[ this.results.length - 1 ],
+                    this.index,
+                    this.results
+                );
+                /**
+                 * if the step function doesn't return a promise instance,
+                 * create a resolved promise instance with the returned value as its value
+                 */
+                if( !isPromise( promise ) ) {
+                    promise = Promise$1.resolve( promise );
+                }
+            } catch( e ) {
+                promise = Promise$1.reject( e );
             }
+
             return promise.then( value => {
                 const result = {
                     status : Sequence.SUCCEEDED,
@@ -1076,61 +1372,90 @@ class Sequence extends EventEmitter {
             this.running && this.next( true );
         }, duration );
     }
+
+    static all( ...args ) {
+        const { steps, interval, cb } = parseArguments( ...args );
+        const sequence = new Sequence( steps, { interval } );
+
+        isFunction( cb ) && cb.call( sequence, sequence );
+
+        return new Promise$1( ( resolve, reject ) => {
+            sequence.on( 'end', results => {
+                resolve( results );
+            } );
+            sequence.on( 'failed', () => {
+                sequence.stop();
+                reject( sequence.results );
+            } );
+        } );
+    }
+
+    static chain( ...args ) {
+        const { steps, interval, cb } = parseArguments( ...args );
+        const sequence = new Sequence( steps, { interval } );
+        isFunction( cb ) && cb.call( sequence, sequence );
+        return new Promise$1( resolve => {
+            sequence.on( 'end', results => {
+                resolve( results );
+            } );
+        } );
+    }
+
+    static any( ...args ) {
+        const { steps, interval, cb } = parseArguments( ...args );
+        const sequence = new Sequence( steps, { interval } );
+        isFunction( cb ) && cb.call( sequence, sequence );
+        return new Promise$1( ( resolve, reject ) => {
+            sequence.on( 'success', () => {
+                resolve( sequence.results );
+                sequence.stop();
+            } );
+
+            sequence.on( 'end', () => {
+                reject( sequence.results );
+            } );
+        } );
+    }
 }
 
 Sequence.SUCCEEDED = 1;
 Sequence.FAILED = 0;
 
-Sequence.all = ( steps, interval = 0 ) => {
-    if( !steps.length ) {
-        return Promise$1.resolve( [] );
-    }
-    const sequence = new Sequence( steps, { interval } );
-    return new Promise$1( ( resolve, reject ) => {
-        sequence.on( 'end', results => {
-            resolve( results );
-        } );
-        sequence.on( 'failed', () => {
-            sequence.stop();
-            reject( sequence.results );
-        } );
-    } );
-};
-
-Sequence.chain = ( steps, interval = 0 ) => {
-    if( !steps.length ) {
-        return Promise$1.resolve( [] );
-    }
-    const sequence = new Sequence( steps, { interval } );
-    return new Promise$1( resolve => {
-        sequence.on( 'end', results => {
-            resolve( results );
-        } );
-    } );
-};
-
-Sequence.any = ( steps, interval = 0 ) => {
-    if( !steps.length ) {
-        return Promise$1.reject( [] );
-    }
-    const sequence = new Sequence( steps, { interval } );
-    return new Promise$1( ( resolve, reject ) => {
-        sequence.on( 'success', () => {
-            resolve( sequence.results );
-            sequence.stop();
-        } );
-
-        sequence.on( 'end', () => {
-            reject( sequence.results );
-        } );
-    } );
-};
-
 Sequence.Error = class {
     constructor( options ) {
-        Object.assign( this, options );
+        assign( this, options );
     }
 };
+
+function parseArguments( steps, interval, cb ) {
+    if( isFunction( interval ) ) {
+        cb = interval;
+        interval = 0;
+    }
+    return { steps, interval, cb }
+}
+
+var isObject = obj => obj && typeof obj === 'object' && !Array.isArray( obj );
+
+function isUndefined$1() {
+    return arguments.length > 0 && typeof arguments[ 0 ] === 'undefined';
+}
+
+var isNumber = ( n, strict = false ) => {
+    if( ({}).toString.call( n ).toLowerCase() === '[object number]' ) {
+        return true;
+    }
+    if( strict ) return false;
+    return !isNaN( parseFloat( n ) ) && isFinite( n )  && !/\.$/.test( n );
+};
+
+var isAsyncFunction = fn => ( {} ).toString.call( fn ) === '[object AsyncFunction]';
+
+var isFunction$1 = fn => ({}).toString.call( fn ) === '[object Function]' || isAsyncFunction( fn );
+
+var isDate = date => ({}).toString.call( date ) === '[object Date]';
+
+var isString$1 = str => typeof str === 'string' || str instanceof String;
 
 var md5 = ( () => {
     const safe_add = (x, y) => {
@@ -1290,7 +1615,7 @@ class Storage {
 
         for( let method of abstracts ) {
 
-            if( !isFunction( this[ method ] ) ) {
+            if( !isFunction$1( this[ method ] ) ) {
                 throw new TypeError( `The method "${method}" must be declared in every class extends from Cache` );
             }
         }
@@ -1298,7 +1623,7 @@ class Storage {
 
     format( data, options = {} ) {
         let string = true;
-        if( !isString( data ) ) {
+        if( !isString$1( data ) ) {
             string = false;
             data = JSON.stringify( data );
         }
@@ -1726,15 +2051,15 @@ class LocalCache {
                 opts = {};
             }
 
-            if( !isUndefined( options.type ) ) {
+            if( !isUndefined$1( options.type ) ) {
                 opts.type = options.type;
             }
 
-            if( !isUndefined( options.extra ) ) {
+            if( !isUndefined$1( options.extra ) ) {
                 opts.extra = options.extra;
             }
 
-            if( !isUndefined( options.mime ) ) {
+            if( !isUndefined$1( options.mime ) ) {
                 opts.mime = options.mime;
             }
             
@@ -1823,13 +2148,13 @@ class LocalCache {
 
             const { priority, length, ctime, type } = options;
 
-            if( !isUndefined( priority ) ) {
+            if( !isUndefined$1( priority ) ) {
                 if( data.priority < priority ) {
                     remove = true;
                 }
             }
 
-            if( !remove && !isUndefined( length ) ) {
+            if( !remove && !isUndefined$1( length ) ) {
                 const content = data.data;
                 if( isNumber( length ) ) {
                     if( content.length >= length ) {
@@ -1842,7 +2167,7 @@ class LocalCache {
                 }
             }
 
-            if( !remove && !isUndefined( ctime ) ) {
+            if( !remove && !isUndefined$1( ctime ) ) {
                 if( isDate( ctime ) || isNumber( ctime ) ) {
                     if( data.ctime < +ctime ) {
                         remove = true;
@@ -1864,7 +2189,7 @@ class LocalCache {
                 }
             }
 
-            if( !remove && isFunction( options.remove ) ) {
+            if( !remove && isFunction$1( options.remove ) ) {
                 if( options.remove( data, key ) === true ) {
                     remove = true;
                 }

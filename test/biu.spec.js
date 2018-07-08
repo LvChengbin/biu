@@ -1,21 +1,20 @@
 import Sequence from '@lvchengbin/sequence';
 import biu from '../src/index'; 
 import Response from '../src/response';
-import config from './config';
 
 describe( 'biu.request', () => {
     it( 'http authorization failed', done => {
-        const api = config.api + '/auth';
+        const api = `${__yolk__.server}/test/ajax/auth`;
         biu.get( api, {
             fullResponse : true
-        } ).then( response => {
+        } ).catch( response => {
             expect( response.status ).toEqual( 401 );
             done();
         } );
     } );
 
     it( 'http authorization', done => {
-        const api = config.api + '/auth';
+        const api = `${__yolk__.server}/test/ajax/auth`;
         biu.get( api, {
             fullResponse : true,
             auth : {
@@ -33,7 +32,7 @@ describe( 'biu.request', () => {
 
 describe( 'biu.get without localcache', () => {
     it( 'simply get cache:true', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
         biu.get( api, {
             cache : true,
             headers : {
@@ -55,7 +54,7 @@ describe( 'biu.get without localcache', () => {
     } );
 
     it( 'simply get type:json, cache:true', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
         biu.get( api, {
             cache : true,
             type : 'json',
@@ -78,7 +77,7 @@ describe( 'biu.get without localcache', () => {
     } );
 
     it( 'simply get cache:false', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
         biu.get( api, {
             type : 'json',
             headers : {
@@ -93,7 +92,7 @@ describe( 'biu.get without localcache', () => {
     } );
 
     it( 'simply get cache:false', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
         biu.get( api, {
             type : 'json',
             headers : {
@@ -108,7 +107,7 @@ describe( 'biu.get without localcache', () => {
     } );
 
     it( 'simply get for raw body', done => {
-        const api = config.api + '/simpleresponse';
+        const api = `${__yolk__.server}/test/ajax`;
         biu.get( api, {
             rawBody : true,
             headers : {
@@ -123,7 +122,7 @@ describe( 'biu.get without localcache', () => {
     } );
 
     it( 'simply get for rull response', done => {
-        const api = config.api + '/simpleresponse';
+        const api = `${__yolk__.server}/test/ajax`;
         biu.get( api, {
             fullResponse : true,
             type : 'json',
@@ -143,7 +142,7 @@ describe( 'biu.get without localcache', () => {
 
 describe( 'biu.get with localcache', () => {
     it( 'get from cache', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
 
         const options = {
             fullResponse : true,
@@ -174,7 +173,7 @@ describe( 'biu.get with localcache', () => {
     } );
 
     it( 'get from cache', done => {
-        const api = config.api + '/ajax?x=1&y=2&m=abc';
+        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2&m=abc`;
 
         const options = {
             fullResponse : true,
@@ -205,7 +204,7 @@ describe( 'biu.get with localcache', () => {
     } );
 
     it( 'using localcache with validate conditions.', done => {
-        const api = config.api + '/ajax?x=1&y=2&z=3';
+        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2&z=3`;
 
         const options = {
             fullResponse : true,
@@ -238,7 +237,7 @@ describe( 'biu.get with localcache', () => {
     } );
 
     it( 'to check data in localcache by md5', done => {
-        const api = config.api + '/md5?x=1&y=2&z=3&m=4';
+        const api = `${__yolk__.server}/test/ajax/md5?x=1&y=2&z=3&m=4`;
 
         const options = {
             fullResponse : true,
@@ -273,7 +272,7 @@ describe( 'biu.get with localcache', () => {
     } );
 
     it( 'to get data in localcache by wrong md5', done => {
-        const api = config.api + '/md5?x=1&y=2&z=3&m=4&n=5';
+        const api = `${__yolk__.server}/test/ajax/md5?x=1&y=2&z=3&m=4&n=5`;
 
         const options = {
             fullResponse : true,
@@ -312,7 +311,7 @@ describe( 'biu.get with localcache', () => {
 describe( 'biu.post', () => {
 
     it( 'post urlencoded', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/post?x=1&y=2`;
         biu.post( api, {
             data : new URLSearchParams( {
                 m : 1,
@@ -342,7 +341,7 @@ describe( 'biu.post', () => {
     } );
 
     it( 'post text/plain', done => {
-        const api = config.api + '/ajax?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/post?x=1&y=2`;
         biu.post( api, {
             data : 'ajax',
             headers : {
@@ -368,7 +367,7 @@ describe( 'biu.post', () => {
         formdata.append( 'x', 1 );
         formdata.append( 'y', 2 );
 
-        const api = config.api + '/formdata?x=1&y=2';
+        const api = `${__yolk__.server}/test/ajax/formdata?x=1&y=2`;
         biu.post( api, {
             data : formdata,
             headers : {

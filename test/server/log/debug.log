@@ -1,0 +1,29 @@
+{"module":"test","level":"error","message":"Uncaught error while initializing controller: Unexpected token export."}
+{"module":"test","level":"error","message":"Uncaught error while initializing controller: Unexpected token export."}
+{"message":"controller \"404\" has not been loaded.","level":"error"}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Not Found."}
+{"module":"test","level":"error","message":"Uncaught error while initializing controller: Cannot find module '@lvchengbin/koa-basic-auth'."}
+{"module":"test","level":"error","message":"Uncaught error while initializing controller: Cannot find module '@lvchengbin/koa-basic-auth'."}
+{"module":"test","level":"error","message":"Uncaught error while initializing controller: Cannot find module '@lvchengbin/koa-basic-auth'."}
+{"module":"test","level":"error","message":"Uncaught error while initializing controller: Cannot find module '@lvchengbin/koa-basic-auth'."}
+{"module":"test","level":"error","message":"Uncaught error while initializing controller: Cannot find module '@lvchengbin/koa-basic-auth'."}
+{"module":"test","level":"error","message":"Uncaught error while initializing controller: Cannot find module '@lvchengbin/koa-basic-auth'."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: this.response is not a function."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: this.response is not a function."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: this.response is not a function."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: this.response is not a function."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: this.response is not a function."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
+{"module":"test","level":"error","message":"Uncaught error while executing in module: Unauthorized."}
