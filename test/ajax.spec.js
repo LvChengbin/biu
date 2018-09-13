@@ -125,9 +125,6 @@ describe( 'ajax', () => {
         } );
     } );
 
-    // I want to add a case for testing uploading a file with FormData
-    // but I don't know how to do this in Chrome Headless, so I will add it
-    // later after I know how to do that.
     /**
     it( 'post multipart/form-data with attachements', done => {
 

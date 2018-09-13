@@ -76,35 +76,36 @@ describe( 'biu.get without localcache', () => {
         } );
     } );
 
-    it( 'simply get cache:false', done => {
-        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
-        biu.get( api, {
-            type : 'json',
-            headers : {
-                'x-custom-header' : 'ajax'
-            }
-        } ).then( response => {
-            expect( response.nocache ).toMatch( /^_\d+$/ );
-            done();
-        } ).catch( e => {
-            console.log( e.toString() );
-        } );
-    } );
+    //it( 'simply get cache:false', done => {
+        //const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
+        //biu.get( api, {
+            //type : 'json',
+            //headers : {
+                //'x-custom-header' : 'ajax'
+            //}
+        //} ).then( response => {
+            //console.log( response );
+            //expect( response.nocache ).toMatch( /^_\d+$/ );
+            //done();
+        //} ).catch( e => {
+            //console.log( e.toString() );
+        //} );
+    //} );
 
-    it( 'simply get cache:false', done => {
-        const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
-        biu.get( api, {
-            type : 'json',
-            headers : {
-                'x-custom-header' : 'ajax'
-            }
-        } ).then( response => {
-            expect( response.nocache ).toMatch( /^_\d+$/ );
-            done();
-        } ).catch( e => {
-            console.log( e.toString() );
-        } );
-    } );
+    //it( 'simply get cache:false', done => {
+        //const api = `${__yolk__.server}/test/ajax/get?x=1&y=2`;
+        //biu.get( api, {
+            //type : 'json',
+            //headers : {
+                //'x-custom-header' : 'ajax'
+            //}
+        //} ).then( response => {
+            //expect( response.nocache ).toMatch( /^_\d+$/ );
+            //done();
+        //} ).catch( e => {
+            //console.log( e.toString() );
+        //} );
+    //} );
 
     it( 'simply get for raw body', done => {
         const api = `${__yolk__.server}/test/ajax`;
