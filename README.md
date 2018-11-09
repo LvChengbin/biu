@@ -1,5 +1,7 @@
 # Biu
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/LvChengbin/biu.svg)](https://greenkeeper.io/)
+
 A library for network requesting using [LocalCache](https://github.com/LvChengbin/localcache) for browsers.
 
 ## Start
